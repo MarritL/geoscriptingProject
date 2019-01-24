@@ -1,6 +1,6 @@
 # Authors: Anne-Juul Welsink and Marrit Leenstra
 # 24th January 2019
-# Exercise 9, Geoscripting, Wageningen University 
+# Final Project, Geoscripting, Wageningen University 
 
 # Function to download and unpack data from url to a user-specified data directory.
 # Input: 
