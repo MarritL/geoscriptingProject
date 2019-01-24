@@ -1,0 +1,36 @@
+---
+title: "Esplaining roe deer movement in the Italian alps"
+authors: Anne-Juul Welsink and Marrit Leenstra
+date: 31 January 2019
+output: html_notebook
+---
+
+TODO:
+Project description
+
+
+```{r}
+# import libraries
+library(dplyr)
+```
+
+```{r}
+# import functions
+source("R/retrieveData.R")
+```
+
+```{r}
+# project variables
+movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
+```
+
+```{r}
+# download movement data
+folder = "data"
+retrieveData(movementDataURL, folder)
+```
+
+```{r}
+# check data
+animal_data <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
+```
