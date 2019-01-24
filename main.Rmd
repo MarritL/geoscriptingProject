@@ -8,10 +8,19 @@ output: html_notebook
 TODO:
 Project description
 
+```{r}
+# check if libraries are installed
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("sp")) install.packages("sp")
+if (!require("DBI")) install.packages("DBI")
+if (!require("RSQLite")) install.packages("RSQLite")
+```
 
 ```{r}
-# import libraries
+# load libraries
 library(dplyr)
+library(sp)
+library(DBI)
 ```
 
 ```{r}
@@ -31,6 +40,26 @@ retrieveData(movementDataURL, folder)
 ```
 
 ```{r}
-# check data
-animal_data <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
+# load data to global environment
+animalData <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
+animal2 <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
+```
+
+```{r}
+# create database (in memory)
+movementDB <- dbConnect(RSQLite::SQLite(), "")
+dbWriteTable(movementDB, "GPSData", animalData)
+dbWriteTable(movementDB, "GPSData", animal2, append=TRUE)
+```
+
+```{r}
+# use data
+dbListTables(movementDB)
+dbListFields(movementDB, "GPSData")
+dbGetQuery(movementDB, 'SELECT "COLLAR_CODE.C.8", "LATITUDE.N.12.7", "LONGITUDE.N.12.7" FROM GPSDATA WHERE "COLLAR_CODE.C.8" = "GSM01438"')
+```
+
+```{r}
+# disconnect database
+dbDisconnect(movementDB)
 ```
