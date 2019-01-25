@@ -14,6 +14,7 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("sp")) install.packages("sp")
 if (!require("DBI")) install.packages("DBI")
 if (!require("RSQLite")) install.packages("RSQLite")
+if (!require("raster")) install.packages("raster")
 ```
 
 ```{r}
@@ -21,6 +22,7 @@ if (!require("RSQLite")) install.packages("RSQLite")
 library(dplyr)
 library(sp)
 library(DBI)
+library(raster)
 ```
 
 ```{r}
@@ -37,6 +39,31 @@ movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_dataset
 # download movement data
 folder = "data"
 retrieveData(movementDataURL, folder)
+
+# load libraries
+library(sf)
+
+# Source functions
+source('R/retrieveData.R')
+
+# create output folder if needed
+if (!dir.exists("output")){
+  dir.create("output")
+}
+
+# download and unzip data
+url = "https://drive.google.com/uc?export=download&id=1vNgOAR-2HtXKpdfZTRsiJW4bMsHTbOjR"
+retrieveData(url,"data")
+
+fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
+for (file in fileList){
+  raster(file)
+}
+# Load data to global environment
+DEM <- raster(fileList[1])
+landUse <- raster(fileList[2])
+slope <- raster(fileList[3])
+
 ```
 
 ```{r}
