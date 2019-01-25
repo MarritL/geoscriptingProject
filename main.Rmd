@@ -40,41 +40,44 @@ folder = "data"
 retrieveData(movementDataURL, folder)
 ```
 
-```{r}
-# load data to global environment
-animalData <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
-animal2 <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", header = TRUE)
-```
+We use roe deer movement data designed as an example dataset for a book about spatial database management (Urbano and Cagnacci, 2014). The data is thus designed for use in a database and set up as interlinking datasets. We decided to use the data as it was designed and set up a SQLite database in memory.
 
 ```{r}
-# create database (in memory)
-movementDB <- dbConnect(RSQLite::SQLite(), "")
-#dbWriteTable(movementDB, "GPSData", animalData)
-#dbWriteTable(movementDB, "GPSData", animal2, append=TRUE)
-```
-
-```{r}
-# save data in database
+# create database connection
 movementDB <- dbConnect(RSQLite::SQLite(), "")
 
+# get files
 gpsData <- list.files(path = "data/tracking_db/data/sensors_data/", pattern = glob2rx('GSM0*.csv'), full.names = TRUE)
 sensorsAnimals <- list.files(path = "data/tracking_db/data/sensors_animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
 sensors <- list.files(path = "data/tracking_db/data/sensors/", pattern = glob2rx('*.csv'), full.names = TRUE)
 animals <- list.files(path = "data/tracking_db/data/animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
 
-saveDataInDB(c(gpsData,sensorsAnimals,sensors,animals), movementDB, c("gpsData","gpsData","gpsData","gpsData","gpsData", "sensorsAnimals", "sensors", "animals"))
+# specify column names for database tables
+gpsDataColumnNames <- c("gpsSensorsCode","lineNo", "utcDate", "utcTime", "lmtDate", "lmtTime", "ecefX", "ecefY","ecefZ", "latitude", "longitude", 
+"height", "dop", "nav", "validated", "satsUsed", "ch01SatId", "ch01SatCnr", "ch02SatId", "ch02SatCnr", "ch03SatId", "ch03SatCnr", "ch04SatId", "ch04SatCnr", "ch05SatId", "ch05SatCnr", "ch06SatId", "ch06SatCnr", "ch07SatId", "ch07SatCnr", "ch08SatId", "ch08SatCnr", "ch09SatId", "ch09SatCnr", "ch10SatId", "ch10SatCnr", "ch11SatId", "ch11SatCnr", "ch12SatId", "ch12SatCnr", "mainVol", "buVol", "temp", "easting", "northing", "remarks")
+sensorsAnimalsColumnNames <- c("animalsId","gpsSensorsId","startTime","EndTime","notes")
+sensorsColumnNames <-c("gpsSensorsId", "gpsSensorsCode", "purchaseDate", "frequency", "vendor","model","sim")
+animalsColumnNames <- c("animalsCode", "name","sex","ageClassCode", "speciesCode", "note")
+
+# save data in database
+saveDataInDB(gpsData, movementDB, "gpsData", gpsDataColumnNames)
+saveDataInDB(sensorsAnimals, movementDB, "sensorsAnimals", sensorsAnimalsColumnNames)
+saveDataInDB(sensors, movementDB, "sensors", sensorsColumnNames)
+saveDataInDB(animals, movementDB, "animals", animalsColumnNames)
 ```
 
 ```{r}
 # use data
 dbListTables(movementDB)
-dbListFields(movementDB, "GPSData")
+dbListFields(movementDB, "gpsData")
 dbListFields(movementDB, "animals")
-dbGetQuery(movementDB, 'SELECT "COLLAR_CODE.C.8", "LATITUDE.N.12.7", "LONGITUDE.N.12.7" FROM GPSDATA WHERE "COLLAR_CODE.C.8" = "GSM01438"')
+dbGetQuery(movementDB, 'SELECT "GPSSensorsCode", "latitude", "longitude" FROM GPSDATA WHERE "GPSSensorsCode" in ("GSM01508", "GSM01438")')
 ```
 
 ```{r}
 # disconnect database
 dbDisconnect(movementDB)
-dbRemoveTable(movementDB, "animals")
 ```
+
+## References
+Urbano, F., & Cagnacci, F. (2014). Spatial database for GPS wildlife tracking data. Springer International Publishing.
