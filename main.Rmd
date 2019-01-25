@@ -36,7 +36,7 @@ source("R/saveDataInDB.R")
 ```{r}
 # project variables
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=1jFuenOVnApu41hlFeDDi3JYV8FSKsHSW"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1fgH2ws_WoeDgMSDYCQNwvI6nzHjVagKc"
 ```
 
 ```{r}
