@@ -133,8 +133,9 @@ animals ON dataWithAnimalId.animalsId = animals.animalsId
 ;'
 
 selectedMovementData <- dbGetQuery(movementDB, query)
-head(selectedMovementData)
 ```
+
+At this point we have the data we need. However, all data is stored as strings. We thus have create a geometry out of the latitude and longitude columns, so that every row represents a point in space. We choose the WGS84 zone 32 (EPSG:32632) as coordinate system, since that gives enough detail for our analyses. 
 
 ```{r}
 # correct classes
@@ -149,11 +150,48 @@ selectedMovementData[3:4] <- list(NULL)
 # remove rows with NA for location
 selectedMovementDataNoNA <- selectedMovementData[!is.na(selectedMovementData$latitude) | !is.na(selectedMovementData$longitude),]
 
-# project
+# create spatial data frame project in WGS84 zone 32
 coords <- selectedMovementDataNoNA[,c(4:3)]
+proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
 proj4 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
-movementSDF <- SpatialPointsDataFrame(coords = coords, data = selectedMovementDataNoNA, proj4string = CRS(proj4))
-str(movementSDF)
+WGS84movementSDF <- SpatialPointsDataFrame(coords = coords, data = selectedMovementDataNoNA, proj4string = CRS(proj4WGS84))
+movementSDF <- spTransform(WGS84movementSDF, CRS(proj4))
+
+# create trajectories
+movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
+
+# reproject rasters
+DEM <- projectRaster(DEM, crs=proj4)
+```
+
+We are curious where our roe deer go to!
+
+```{r}
+# check data
+plot(DEM)
+lines(movementTrajectories[[1]])
+lines(movementTrajectories[[2]], col = 'red')
+lines(movementTrajectories[[3]], col = 'blue')
+lines(movementTrajectories[[4]], col = 'purple')
+lines(movementTrajectories[[5]], col = 'orange')
+```
+
+The data clearly contains some outliers. These will need to be removed in order to perform reliable analyses.
+
+```{r}
+# clean data
+# remove outliers (distance)
+
+# regularize time?
+
+
+```
+
+
+
+```{r}
+
+
 ```
 
 ```{r}
