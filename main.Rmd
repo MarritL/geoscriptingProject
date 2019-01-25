@@ -1,5 +1,5 @@
 ---
-title: "Esplaining roe deer movement in the Italian alps"
+title: "Explaining roe deer movement in the Italian alps"
 authors: Anne-Juul Welsink and Marrit Leenstra
 date: 31 January 2019
 output: html_notebook
@@ -28,6 +28,7 @@ library(raster)
 ```{r}
 # import functions
 source("R/retrieveData.R")
+source("R/saveDataInDB.R")
 ```
 
 ```{r}
@@ -75,18 +76,32 @@ animal2 <- read.csv2(file = "data/tracking_db/data/sensors_data/GSM01438.csv", h
 ```{r}
 # create database (in memory)
 movementDB <- dbConnect(RSQLite::SQLite(), "")
-dbWriteTable(movementDB, "GPSData", animalData)
-dbWriteTable(movementDB, "GPSData", animal2, append=TRUE)
+#dbWriteTable(movementDB, "GPSData", animalData)
+#dbWriteTable(movementDB, "GPSData", animal2, append=TRUE)
+```
+
+```{r}
+# save data in database
+movementDB <- dbConnect(RSQLite::SQLite(), "")
+
+gpsData <- list.files(path = "data/tracking_db/data/sensors_data/", pattern = glob2rx('GSM0*.csv'), full.names = TRUE)
+sensorsAnimals <- list.files(path = "data/tracking_db/data/sensors_animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
+sensors <- list.files(path = "data/tracking_db/data/sensors/", pattern = glob2rx('*.csv'), full.names = TRUE)
+animals <- list.files(path = "data/tracking_db/data/animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
+
+saveDataInDB(c(gpsData,sensorsAnimals,sensors,animals), movementDB, c("gpsData","gpsData","gpsData","gpsData","gpsData", "sensorsAnimals", "sensors", "animals"))
 ```
 
 ```{r}
 # use data
 dbListTables(movementDB)
 dbListFields(movementDB, "GPSData")
+dbListFields(movementDB, "animals")
 dbGetQuery(movementDB, 'SELECT "COLLAR_CODE.C.8", "LATITUDE.N.12.7", "LONGITUDE.N.12.7" FROM GPSDATA WHERE "COLLAR_CODE.C.8" = "GSM01438"')
 ```
 
 ```{r}
 # disconnect database
 dbDisconnect(movementDB)
+dbRemoveTable(movementDB, "animals")
 ```
