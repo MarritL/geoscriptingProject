@@ -12,19 +12,23 @@ Project description
 # check if libraries are installed
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("sp")) install.packages("sp")
+if (!require("sf")) install.packages("sf")
 if (!require("DBI")) install.packages("DBI")
 if (!require("RSQLite")) install.packages("RSQLite")
 if (!require("raster")) install.packages("raster")
 if (!require("adehabitatLT")) install.packages("adehabitatLT")
+if (!require("lubridate")) install.packages("lubridate")
 ```
 
 ```{r}
 # load libraries
 library(dplyr)
 library(sp)
+library(sf)
 library(DBI)
 library(raster)
 library(adehabitatLT)
+library(lubridate)
 ```
 
 ```{r}
@@ -129,12 +133,27 @@ animals ON dataWithAnimalId.animalsId = animals.animalsId
 ;'
 
 selectedMovementData <- dbGetQuery(movementDB, query)
+head(selectedMovementData)
 ```
 
 ```{r}
-# create spatial dataframe
+# correct classes
+selectedMovementData$sex <- factor(selectedMovementData$sex)
+class(selectedMovementData$latitude) <- "numeric"
+class(selectedMovementData$longitude) <- "numeric"
+class(selectedMovementData$height) <- "numeric"
+selectedMovementData$date <- dmy_hms(paste(selectedMovementData$utcDate, selectedMovementData$utcTime), tz = "UTC")
+# remove redundant columns
+selectedMovementData[3:4] <- list(NULL)
 
+# remove rows with NA for location
+selectedMovementDataNoNA <- selectedMovementData[!is.na(selectedMovementData$latitude) | !is.na(selectedMovementData$longitude),]
 
+# project
+coords <- selectedMovementDataNoNA[,c(4:3)]
+proj4 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
+movementSDF <- SpatialPointsDataFrame(coords = coords, data = selectedMovementDataNoNA, proj4string = CRS(proj4))
+str(movementSDF)
 ```
 
 ```{r}
