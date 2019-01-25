@@ -11,10 +11,10 @@
 # Output:
 #    data saved in user-specified database. 
 
-saveDataInDB <- function(dataPath, database, tableName, columnNames){
+saveDataInDB <- function(dataPath, database, tableName, columnNames, header){
   
   # read data into dataframe(s)
-  DFlist <- lapply(dataPath,read.csv2)
+  DFlist <- lapply(dataPath,read.csv2,header=header)
 
   # save every dataframe in the database
   for (i in 1:length(DFlist)){

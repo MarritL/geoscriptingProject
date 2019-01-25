@@ -15,6 +15,7 @@ if (!require("sp")) install.packages("sp")
 if (!require("DBI")) install.packages("DBI")
 if (!require("RSQLite")) install.packages("RSQLite")
 if (!require("raster")) install.packages("raster")
+if (!require("adehabitatLT")) install.packages("adehabitatLT")
 ```
 
 ```{r}
@@ -23,6 +24,7 @@ library(dplyr)
 library(sp)
 library(DBI)
 library(raster)
+library(adehabitatLT)
 ```
 
 ```{r}
@@ -34,6 +36,7 @@ source("R/saveDataInDB.R")
 ```{r}
 # project variables
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1vNgOAR-2HtXKpdfZTRsiJW4bMsHTbOjR"
 ```
 
 ```{r}
@@ -41,30 +44,14 @@ movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_dataset
 folder = "data"
 retrieveData(movementDataURL, folder)
 
-# load libraries
-library(sf)
-
-# Source functions
-source('R/retrieveData.R')
-
-# create output folder if needed
-if (!dir.exists("output")){
-  dir.create("output")
-}
-
-# download and unzip data
-url = "https://drive.google.com/uc?export=download&id=1vNgOAR-2HtXKpdfZTRsiJW4bMsHTbOjR"
-retrieveData(url,"data")
-
+# download environmental data
+retrieveData(environmentalURL, folder)
 fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
-for (file in fileList){
-  raster(file)
-}
-# Load data to global environment
+
+# Load environmental data to global environment
 DEM <- raster(fileList[1])
 landUse <- raster(fileList[2])
 slope <- raster(fileList[3])
-
 ```
 
 We use roe deer movement data designed as an example dataset for a book about spatial database management (Urbano and Cagnacci, 2014). The data is thus designed for use in a database and set up as interlinking datasets. We decided to use the data as it was designed and set up a SQLite database in memory.
@@ -79,26 +66,75 @@ sensorsAnimals <- list.files(path = "data/tracking_db/data/sensors_animals/", pa
 sensors <- list.files(path = "data/tracking_db/data/sensors/", pattern = glob2rx('*.csv'), full.names = TRUE)
 animals <- list.files(path = "data/tracking_db/data/animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
 
+# create dataframe
+
 # specify column names for database tables
 gpsDataColumnNames <- c("gpsSensorsCode","lineNo", "utcDate", "utcTime", "lmtDate", "lmtTime", "ecefX", "ecefY","ecefZ", "latitude", "longitude", 
 "height", "dop", "nav", "validated", "satsUsed", "ch01SatId", "ch01SatCnr", "ch02SatId", "ch02SatCnr", "ch03SatId", "ch03SatCnr", "ch04SatId", "ch04SatCnr", "ch05SatId", "ch05SatCnr", "ch06SatId", "ch06SatCnr", "ch07SatId", "ch07SatCnr", "ch08SatId", "ch08SatCnr", "ch09SatId", "ch09SatCnr", "ch10SatId", "ch10SatCnr", "ch11SatId", "ch11SatCnr", "ch12SatId", "ch12SatCnr", "mainVol", "buVol", "temp", "easting", "northing", "remarks")
 sensorsAnimalsColumnNames <- c("animalsId","gpsSensorsId","startTime","EndTime","notes")
 sensorsColumnNames <-c("gpsSensorsId", "gpsSensorsCode", "purchaseDate", "frequency", "vendor","model","sim")
-animalsColumnNames <- c("animalsCode", "name","sex","ageClassCode", "speciesCode", "note")
+animalsColumnNames <- c("animalsId", "animalsCode", "name","sex","ageClassCode", "speciesCode")
 
 # save data in database
-saveDataInDB(gpsData, movementDB, "gpsData", gpsDataColumnNames)
-saveDataInDB(sensorsAnimals, movementDB, "sensorsAnimals", sensorsAnimalsColumnNames)
-saveDataInDB(sensors, movementDB, "sensors", sensorsColumnNames)
-saveDataInDB(animals, movementDB, "animals", animalsColumnNames)
+saveDataInDB(gpsData, movementDB, "gpsData", gpsDataColumnNames, TRUE)
+saveDataInDB(sensorsAnimals, movementDB, "sensorsAnimals", sensorsAnimalsColumnNames, FALSE)
+saveDataInDB(sensors, movementDB, "sensors", sensorsColumnNames, FALSE)
+saveDataInDB(animals, movementDB, "animals", animalsColumnNames, FALSE)
 ```
 
 ```{r}
 # use data
-dbListTables(movementDB)
+#dbListTables(movementDB)
 dbListFields(movementDB, "gpsData")
+dbListFields(movementDB, "sensorsAnimals")
+dbListFields(movementDB, "sensors")
 dbListFields(movementDB, "animals")
-dbGetQuery(movementDB, 'SELECT "GPSSensorsCode", "latitude", "longitude" FROM GPSDATA WHERE "GPSSensorsCode" in ("GSM01508", "GSM01438")')
+#dbGetQuery(movementDB, 'SELECT "GPSSensorsCode", "latitude", "longitude" FROM GPSDATA WHERE #"GPSSensorsCode" in ("GSM01508", "GSM01438")')
+```
+
+The database can be queried with SQL. Since we want to link the GPS data with specific animals we need to join these tables. However, this was less straightforward than expeced, because these tables did not have any information in common. We therefore had to join all four tables to get to the combination of data we needed. We did this by embedding SQL statements. 
+
+```{r}
+# query data from database
+query <- '
+SELECT
+animals.name,
+animals.sex,
+dataWithAnimalId.utcDate, dataWithAnimalId.utcTime, 
+dataWithAnimalId.latitude, dataWithAnimalId.longitude,
+dataWithAnimalId.height
+FROM
+  (SELECT 
+  dataWithSensorId.gpsSensorsCode, 
+  dataWithSensorId.utcDate, dataWithSensorId.utcTime, 
+  dataWithSensorId.latitude, dataWithSensorId.longitude, 
+  dataWithSensorId.height,
+  dataWithSensorId.gpsSensorsId, 
+  sensorsAnimals.animalsId 
+  FROM 
+    (SELECT 
+    gpsData.gpsSensorsCode, 
+    gpsData.utcDate, gpsData.utcTime, 
+    gpsData.latitude, gpsData.longitude, 
+    gpsData.height,
+    sensors.gpsSensorsId 
+    FROM 
+    gpsData 
+    LEFT JOIN 
+    sensors ON gpsData.gpsSensorsCode = sensors.gpsSensorsCode) AS dataWithSensorId 
+  LEFT JOIN 
+  sensorsAnimals ON dataWithSensorId.gpsSensorsId = sensorsAnimals.gpsSensorsId) AS dataWithAnimalId 
+LEFT JOIN
+animals ON dataWithAnimalId.animalsId = animals.animalsId
+;'
+
+selectedMovementData <- dbGetQuery(movementDB, query)
+```
+
+```{r}
+# create spatial dataframe
+
+
 ```
 
 ```{r}
