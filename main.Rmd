@@ -18,6 +18,7 @@ if (!require("RSQLite")) install.packages("RSQLite")
 if (!require("raster")) install.packages("raster")
 if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
+if (!require("ggplot2")) install.packages("ggplot2")
 ```
 
 ```{r}
@@ -29,6 +30,7 @@ library(DBI)
 library(raster)
 library(adehabitatLT)
 library(lubridate)
+library(ggplot2)
 ```
 
 ```{r}
@@ -50,9 +52,11 @@ retrieveData(movementDataURL, folder)
 
 # download environmental data
 retrieveData(environmentalURL, folder)
-fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
+```
 
+```{r}
 # Load environmental data to global environment
+fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
 DEM <- raster(fileList[1])
 landUse <- raster(fileList[2])
 slope <- raster(fileList[3])
@@ -174,16 +178,62 @@ lines(movementTrajectories[[2]], col = 'red')
 lines(movementTrajectories[[3]], col = 'blue')
 lines(movementTrajectories[[4]], col = 'purple')
 lines(movementTrajectories[[5]], col = 'orange')
+
+par(mfrow=c(3, 2))
+hist(movementTrajectories[[1]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[1]))
+hist(movementTrajectories[[2]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[2]))
+hist(movementTrajectories[[3]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[3]))
+hist(movementTrajectories[[4]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[4]))
+hist(movementTrajectories[[5]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[5]))
+
+# quantiles give a good indication of the distribution (around 4h between relocations)
+quantile(diff(movementTrajectories[[1]][,'date']))
+quantile(diff(movementTrajectories[[2]][,'date']))
+quantile(diff(movementTrajectories[[3]][,'date']))
+quantile(diff(movementTrajectories[[4]][,'date']))
+quantile(diff(movementTrajectories[[5]][,'date']))
+
+par(mfrow=c(1, 1))
+hist(as.numeric(diff(movementTrajectories[[1]][,'date'])), xlim = c(0,5000), ylim = c(0,1000), breaks = seq(0, 10000000, by = 100), xlab = "time", main = paste("Time between relocations by" , id(movementTrajectories[1])))
+hist(as.numeric(diff(movementTrajectories[[2]][,'date'])), xlim = c(0,5000), ylim = c(0,1000), breaks = seq(0, 10000000, by = 100), main = paste("Time between relocations by" , id(movementTrajectories[2])))
+
+dataframeTrajectories <- ld(movementTrajectories)
+groups <- dataframeTrajectories %>% group_by(id) %>% mutate(timeDifference = c(NA, diff(date)))
+trajectories <- dl(groups)
+
+# boxplots to find best variable to remove outliers
+par(mfrow=c(3,2))
+ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groups, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groups, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groups, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
 ```
 
 The data clearly contains some outliers. These will need to be removed in order to perform reliable analyses.
 
 ```{r}
 # clean data
-# remove outliers (distance)
+# remove outliers based on x-coordinates and distance between relocations
+groupsCleaned <- groups %>% filter(x < 700000) %>% filter(x > 650000) %>% filter(dist < 000)
 
-# regularize time?
+#cast back to ltraj 
+movementTrajectoriesCleaned <- dl(groupsCleaned)
 
+# check data again
+plot(DEM)
+lines(movementTrajectoriesCleaned[[1]])
+lines(movementTrajectoriesCleaned[[2]], col = 'red')
+lines(movementTrajectoriesCleaned[[3]], col = 'blue')
+lines(movementTrajectoriesCleaned[[4]], col = 'purple')
+lines(movementTrajectoriesCleaned[[5]], col = 'orange')
+
+# boxplots
+ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groupsCleaned, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+ggplot(groupsCleaned, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
 
 ```
 
