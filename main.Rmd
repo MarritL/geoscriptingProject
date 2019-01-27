@@ -58,8 +58,9 @@ retrieveData(environmentalURL, folder)
 # Load environmental data to global environment
 fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
 DEM <- raster(fileList[1])
-landUse <- raster(fileList[2])
-slope <- raster(fileList[3])
+landsat <- brick(fileList[2])
+landUse <- raster(fileList[3])
+slope <- raster(fileList[4])
 ```
 
 We use an example dataset of roe deer movement from a book about spatial database management (Urbano and Cagnacci, 2014). The data are thus designed for use in a database and set up as interlinking datasets. Direct use in R is possible, but undesirable due to a lack of structure. Therefore, we set up an SQLite database in memory to process the data.
@@ -74,8 +75,6 @@ sensorsAnimals <- list.files(path = "data/tracking_db/data/sensors_animals/", pa
 sensors <- list.files(path = "data/tracking_db/data/sensors/", pattern = glob2rx('*.csv'), full.names = TRUE)
 animals <- list.files(path = "data/tracking_db/data/animals/", pattern = glob2rx('*.csv'), full.names = TRUE)
 
-# create dataframe
-
 # specify column names for database tables
 gpsDataColumnNames <- c("gpsSensorsCode","lineNo", "utcDate", "utcTime", "lmtDate", "lmtTime", "ecefX", "ecefY","ecefZ", "latitude", "longitude", 
 "height", "dop", "nav", "validated", "satsUsed", "ch01SatId", "ch01SatCnr", "ch02SatId", "ch02SatCnr", "ch03SatId", "ch03SatCnr", "ch04SatId", "ch04SatCnr", "ch05SatId", "ch05SatCnr", "ch06SatId", "ch06SatCnr", "ch07SatId", "ch07SatCnr", "ch08SatId", "ch08SatCnr", "ch09SatId", "ch09SatCnr", "ch10SatId", "ch10SatCnr", "ch11SatId", "ch11SatCnr", "ch12SatId", "ch12SatCnr", "mainVol", "buVol", "temp", "easting", "northing", "remarks")
@@ -88,16 +87,6 @@ saveDataInDB(gpsData, movementDB, "gpsData", gpsDataColumnNames, TRUE)
 saveDataInDB(sensorsAnimals, movementDB, "sensorsAnimals", sensorsAnimalsColumnNames, FALSE)
 saveDataInDB(sensors, movementDB, "sensors", sensorsColumnNames, FALSE)
 saveDataInDB(animals, movementDB, "animals", animalsColumnNames, FALSE)
-```
-
-```{r}
-# use data
-#dbListTables(movementDB)
-dbListFields(movementDB, "gpsData")
-dbListFields(movementDB, "sensorsAnimals")
-dbListFields(movementDB, "sensors")
-dbListFields(movementDB, "animals")
-#dbGetQuery(movementDB, 'SELECT "GPSSensorsCode", "latitude", "longitude" FROM GPSDATA WHERE #"GPSSensorsCode" in ("GSM01508", "GSM01438")')
 ```
 
 The database can be queried with SQL. Since we want to link the GPS data with specific animals we need to join these tables. However, these tables do not have any common fields that can be used for a straightforward join. Embedding of SQL statements allows us to get to the required combination of data. 
@@ -157,15 +146,15 @@ selectedMovementDataNoNA <- selectedMovementData[!is.na(selectedMovementData$lat
 # create spatial data frame projected in WGS84 zone 32
 coords <- selectedMovementDataNoNA[,c(4:3)]
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
-proj4 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
+proj4zone32 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
 WGS84movementSDF <- SpatialPointsDataFrame(coords = coords, data = selectedMovementDataNoNA, proj4string = CRS(proj4WGS84))
-movementSDF <- spTransform(WGS84movementSDF, CRS(proj4))
+movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 
 # create trajectories
 movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
 
 # reproject rasters
-DEM <- projectRaster(DEM, crs=proj4)
+#DEM <- projectRaster(DEM, crs=proj4zone32)
 ```
 
 We are curious where our roe deer are going! 
@@ -211,12 +200,12 @@ ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(lege
 ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
 ```
 
-The data clearly contain some outliers. These are removed in order to perform reliable analyses. ################# Uitleg van cut-off point? Outliers are identified on the basis on the distance between relocations. A moved distance of .... or higher is considered unrealistic. #######################
+The data clearly contain some outliers. These are removed in order to perform reliable analyses.  ################# Uitleg van cut-off point? Outliers are identified on the basis on the distance between relocations. A moved distance of .... or higher is considered unrealistic. #######################
 
 ```{r}
 # clean data
 # remove outliers based on x-coordinates and distance between relocations
-groupsCleaned <- groups %>% filter(x < 700000) %>% filter(x > 650000) %>% filter(dist < 000)
+groupsCleaned <- groups %>% filter(x < 700000) %>% filter(x > 650000) %>% filter(dist < 2000)
 
 # cast back to ltraj 
 movementTrajectoriesCleaned <- dl(groupsCleaned)
