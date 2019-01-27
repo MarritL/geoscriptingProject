@@ -19,6 +19,7 @@ if (!require("raster")) install.packages("raster")
 if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
 ```
 
 ```{r}
@@ -31,6 +32,7 @@ library(raster)
 library(adehabitatLT)
 library(lubridate)
 library(ggplot2)
+library(gridExtra)
 ```
 
 ```{r}
@@ -157,7 +159,7 @@ movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementS
 #DEM <- projectRaster(DEM, crs=proj4zone32)
 ```
 
-We are curious where our roe deer are going! 
+We are curious where "our" roe deer are going! 
 
 ```{r}
 # check data
@@ -167,49 +169,47 @@ lines(movementTrajectories[[2]], col = 'red')
 lines(movementTrajectories[[3]], col = 'blue')
 lines(movementTrajectories[[4]], col = 'purple')
 lines(movementTrajectories[[5]], col = 'orange')
-
-par(mfrow=c(3, 2))
-hist(movementTrajectories[[1]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[1]))
-hist(movementTrajectories[[2]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[2]))
-hist(movementTrajectories[[3]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[3]))
-hist(movementTrajectories[[4]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[4]))
-hist(movementTrajectories[[5]]$dist, xlim = c(0, 2000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[5]))
-
-# quantiles give a good indication of the distribution (around 4h between relocations)
-quantile(diff(movementTrajectories[[1]][,'date']))
-quantile(diff(movementTrajectories[[2]][,'date']))
-quantile(diff(movementTrajectories[[3]][,'date']))
-quantile(diff(movementTrajectories[[4]][,'date']))
-quantile(diff(movementTrajectories[[5]][,'date']))
-
-par(mfrow=c(1, 1))
-hist(as.numeric(diff(movementTrajectories[[1]][,'date'])), xlim = c(0,5000), ylim = c(0,1000), breaks = seq(0, 10000000, by = 100), xlab = "time", main = paste("Time between relocations by" , id(movementTrajectories[1])))
-hist(as.numeric(diff(movementTrajectories[[2]][,'date'])), xlim = c(0,5000), ylim = c(0,1000), breaks = seq(0, 10000000, by = 100), main = paste("Time between relocations by" , id(movementTrajectories[2])))
-
-dataframeTrajectories <- ld(movementTrajectories)
-groups <- dataframeTrajectories %>% group_by(id) %>% mutate(timeDifference = c(NA, diff(date)))
-trajectories <- dl(groups)
-
-# boxplots to find best variable to remove outliers
-par(mfrow=c(3,2))
-ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groups, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groups, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groups, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
 ```
 
-The data clearly contain some outliers. These are removed in order to perform reliable analyses.  ################# Uitleg van cut-off point? Outliers are identified on the basis on the distance between relocations. A moved distance of .... or higher is considered unrealistic. #######################
+Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. We look at boxplots of the different variables to find the best variables to remove these outliers. 
 
 ```{r}
-# clean data
+p1 <- ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
+p2 <- ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
+p3 <- ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
+p4 <- ggplot(groups, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
+p5 <- ggplot(groups, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
+p6 <- ggplot(groups, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
+
+grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
+```
+
+These boxplots show the outliers very clearly in the x and y-coordinates as well as the distance and time between relocations. In previous steps we removed some measurements with NA's for latitude and longitude to be able to convert the dataframe to a spatial dataframe. As a result, the time between relocations is not 100% accurate. We will therefore use only x-coordinates, y-coordinates and distance between relations to clean our dataset. Tresholds for the x and y-coordinates are based purely on these boxplots. To determine the treshold for the distance we take a look at the distribution of steplengths. 
+
+```{r}
+par(mfrow=c(3, 2))
+for (i in 1:length(id(movementTrajectories))){
+  hist(movementTrajectories[[i]]$dist, xlim = c(0, 5000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[i]))
+}
+```
+Looking at the distribution of steplengths and taking into account the consideration that roe deer generally do not travel great distances, a moved distance of 1500m or higher in one relocation is considered unrealistic. 
+
+```{r}
+# tresholds
+xMin <- 650000
+xMax <- 700000
+yMin <- 5092500
+yMax <- 5107500
+distMax <- 1500
+
 # remove outliers based on x-coordinates and distance between relocations
-groupsCleaned <- groups %>% filter(x < 700000) %>% filter(x > 650000) %>% filter(dist < 2000)
+groupsCleaned <- groups %>% filter(x < xMax) %>% filter(x > xMin) %>% filter(y < yMax) %>% filter(y > yMin) %>% filter(dist < distMax)
 
 # cast back to ltraj 
 movementTrajectoriesCleaned <- dl(groupsCleaned)
+```
 
+```{r}
 # check data again
 plot(DEM)
 lines(movementTrajectoriesCleaned[[1]])
@@ -219,19 +219,18 @@ lines(movementTrajectoriesCleaned[[4]], col = 'purple')
 lines(movementTrajectoriesCleaned[[5]], col = 'orange')
 
 # boxplots
-ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groupsCleaned, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
-ggplot(groupsCleaned, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none")
+p1 <- ggplot(groupsCleaned, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
+p2 <- ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
+p3 <- ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
+p4 <- ggplot(groupsCleaned, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
+p5 <- ggplot(groupsCleaned, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
+p6 <- ggplot(groupsCleaned, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
 
+grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 ```
 
+The data is ready for the analyses!
 
-
-```{r}
-
-
-```
 
 ```{r}
 # disconnect database
