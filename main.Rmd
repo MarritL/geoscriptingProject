@@ -174,6 +174,12 @@ lines(movementTrajectories[[5]], col = 'orange')
 Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. We look at boxplots of the different variables to find the best variables to remove these outliers. 
 
 ```{r}
+# cast back to dataframe
+dataframeTrajectories <- ld(movementTrajectories)
+groups <- dataframeTrajectories %>% group_by(id) %>% mutate(timeDifference = c(NA, diff(date)))
+trajectories <- dl(groups)
+
+#plot
 p1 <- ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
 p2 <- ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
 p3 <- ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
