@@ -48,8 +48,14 @@ source("R/simulateMovement.R")
 
 ```{r}
 # project variables
+
+# downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
 environmentalURL = "https://drive.google.com/uc?export=download&id=18LX2hmiYEgcdO1SfzhfzItHx3ii1WKKH"
+
+# projections
+proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
+proj4zone32 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
 ```
 
 ```{r}
@@ -152,8 +158,6 @@ selectedMovementDataNoNA <- selectedMovementData[!is.na(selectedMovementData$lat
 
 # create spatial data frame projected in WGS84 zone 32
 coords <- selectedMovementDataNoNA[,c(4:3)]
-proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
-proj4zone32 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
 WGS84movementSDF <- SpatialPointsDataFrame(coords = coords, data = selectedMovementDataNoNA, proj4string = CRS(proj4WGS84))
 movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 
@@ -302,7 +306,8 @@ m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
   addProviderTiles('Esri.WorldImagery') %>%
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
-  addProviderTiles("CartoDB.PositronOnlyLabels") # %>% 
+  addProviderTiles("CartoDB.PositronOnlyLabels") %>%
+  
 #  addLines
   #addMarkers(data = dfPoints)
 m  # Print the map
@@ -314,7 +319,14 @@ crs(DEM) <- sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 ```
 
 ```{r}
-head(movementSDF$latitude)
+# create a normal dataframe with cleaned data
+dataframeCleaned <- ungroup(groupsCleaned)
+
+coords <- dataframeCleaned[,c(1:2)]
+zone32cleanedData <- SpatialPointsDataFrame(coords = coords, data = dataframeCleaned, proj4string = CRS(proj4zone32))
+WGS84cleanedData <- spTransform(zone32cleanedData, CRS(proj4WGS84))
+
+
 
 # from the sp vignette:
 l1 = cbind(c(659213.4, 659189.9, 659058.3, 659281.3, 659181.9, 659185.8),c(5818582, 5818585, 5818590, 5818585, 5818597, 5818589))
