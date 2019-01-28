@@ -20,7 +20,6 @@ if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
-if(!require("ggpubr")) install.packages("ggpubr")
 ```
 
 ```{r}
@@ -34,8 +33,6 @@ library(adehabitatLT)
 library(lubridate)
 library(ggplot2)
 library(gridExtra)
-library(devtools)
-library(ggpubr)
 ```
 
 ```{r}
@@ -237,27 +234,25 @@ grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 
 The data is ready for the analyses!
 
-Validate height
+Before we start our movement analysis, we will first have a look at the reliability of our data.
+The height measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean height measurements differ significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the height measurements.
 ```{r}
-#groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
-#DEM # 
-
 # Calculate DEM height values at point locations for which GPS height data is available.
 heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
-#heightDiff <- heightDEM$DEM_be75 - groupsCleaned$height
-DEMheight <- heightDEM$DEM_be75
-GPSheight <- groupsCleaned$height
-heightData <- data.frame(group = rep(c("DEM height", "GPS height"), each = 10974), height = c(DEMheight, GPSheight))
-# Compute summary statistics by groups
-summaryHeight <- group_by(heightData, group) %>%
-  summarise(
-    mean = mean(height, na.rm = TRUE),
-    sd = sd(height, na.rm = TRUE)
-  )
 
+heightData <- data.frame(group = rep(c("DEM", "GPS"), each = 10974), height = c(heightDEM$DEM_be75, groupsCleaned$height))
+
+# Perform a paired t-test to compare mean GPS and DEM height
 tTest <- t.test(DEMheight, GPSheight, paired = TRUE, alternative = "two.sided")
+print("Results of the paired t-test:")
+tTest
+
+#Visualize
+boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
 
 ```
+
+The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean heights between the GPS height measurement and the DEM height values. The mean difference between the two height measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS height measurements are not always reliable. Therefore, we will use DEM height measurement for our further analysis.  
 
 Simulate movement pattern
 ```{r}
