@@ -21,6 +21,7 @@ if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
 if (!require("leaflet")) install.packages("leaflet")
+if (!require("rlist")) install.packages("rlist")
 ```
 
 ```{r}
@@ -35,12 +36,14 @@ library(lubridate)
 library(ggplot2)
 library(gridExtra)
 library(leaflet)
+library(rlist)
 ```
 
 ```{r}
 # import functions
 source("R/retrieveData.R")
 source("R/saveDataInDB.R")
+source("R/simulateMovement.R")
 ```
 
 ```{r}
@@ -256,25 +259,16 @@ boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = 
 
 The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean heights between the GPS height measurement and the DEM height values. The mean difference between the two height measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS height measurements are not always reliable. Therefore, we will use DEM height measurement for our further analysis.  
 
-Simulate movement pattern
 ```{r}
-# variables
-animalName <- id(movementTrajectories)
-startdate <- summarise(groupsCleaned, startdate = min(date))[,'startdate'][[1]]
-firstRow <- groupsCleaned %>% filter(row_number()==1)
-startcoords <- as.data.frame(firstRow[,1:2])
-nSteps <- group_size(groupsCleaned)
-timelag <- summarize(groupsCleaned, timelag = mean(dt))[,'timelag'][[1]] # mean time between steps in seconds
+# number of simulations per animal
+nSimulations <- 10   
 
-# create dateseq
-dateSeq <- seq(from = startdate[1], by= timelag[1], length.out = nSteps[1])
+# perform simulations
+simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
 
-# one simulation and plot
-sim1 <- simm.crw(dateSeq, h = 1.1, r = 0, x0 = c(658992.4, 5097715), id = animalName[1], proj4string = CRS(proj4zone32))
-mean(sim1[[1]]$dist, na.rm=T)
+# plot example
 plot(DEM)
-lines(sim1[[1]])
-
+lines(simulations[[1]][[1]][[1]])
 ```
 
 Visualize using leaflet
