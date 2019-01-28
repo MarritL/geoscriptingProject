@@ -154,7 +154,6 @@ movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 
 # create trajectories
 movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
-
 ```
 
 We are curious where "our" roe deer are going! 
@@ -174,7 +173,7 @@ Oops! The data clearly contain some outliers. These need to be removed in order 
 ```{r}
 # cast back to dataframe
 dataframeTrajectories <- ld(movementTrajectories)
-groups <- dataframeTrajectories %>% group_by(id) %>% mutate(timeDifference = c(NA, diff(date)))
+groups <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
 trajectories <- dl(groups)
 
 #plot
@@ -183,7 +182,7 @@ p2 <- ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + them
 p3 <- ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
 p4 <- ggplot(groups, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
 p5 <- ggplot(groups, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
-p6 <- ggplot(groups, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
+p6 <- ggplot(groups, aes(x=id, y=dt, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
 
 grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 ```
@@ -228,12 +227,14 @@ p2 <- ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2)
 p3 <- ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
 p4 <- ggplot(groupsCleaned, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
 p5 <- ggplot(groupsCleaned, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
-p6 <- ggplot(groupsCleaned, aes(x=id, y=timeDifference, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
+p6 <- ggplot(groupsCleaned, aes(x=id, y=dt, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
 
 grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 ```
 
 The data is ready for the analyses!
+
+
 
 
 ```{r}
