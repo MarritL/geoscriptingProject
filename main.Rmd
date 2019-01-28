@@ -314,44 +314,31 @@ m <- leaflet() %>%
   addProviderTiles('Esri.WorldImagery') %>%
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
   addProviderTiles("CartoDB.PositronOnlyLabels") %>% 
-  addMarkers(data = head(selectedMovementData, n=1000))
+  addPolylines(data = Sl1)
+  #addMarkers(data = head(selectedMovementData, n=1000))
   #addMarkers(data = dfPoints)
 m  # Print the map
 ```
 
 ```{r}
-# create a normal dataframe with cleaned data
-dataframeCleaned <- ungroup(groupsCleaned)
+# create spatial lines between the animal locations
 
-coords <- dataframeCleaned[,c(1:2)]
-zone32cleanedData <- SpatialPointsDataFrame(coords = coords, data = dataframeCleaned, proj4string = CRS(proj4zone32))
-WGS84cleanedData <- spTransform(zone32cleanedData, CRS(proj4WGS84))
-
-
-
-# from the sp vignette:
-l1 = cbind(c(659213.4, 659189.9, 659058.3, 659281.3, 659181.9, 659185.8),c(5818582, 5818585, 5818590, 5818585, 5818597, 5818589))
-rownames(l1) = letters[1:6]
-l1a = cbind(l1[,1]+.05,l1[,2]+.05)
-rownames(l1a) = letters[1:6]
-#l2 = cbind(c(1,2,3),c(1,1.5,1))
-#rownames(l2) = letters[1:3]
+# select per animal
+animal1 <- groupsCleaned %>% filter(id == "Agostino")
+coords <- animal1[,c("x","y")]
+zone32animal1 <- SpatialPointsDataFrame(coords = coords, data = animal1, proj4string = CRS(proj4zone32))
+mercatorAnimal1 <- spTransform(zone32animal1, CRS(proj4WGS84))
+longitude <- (mercatorAnimal1@coords[,"x"])
+latitude <- (mercatorAnimal1@coords[,"y"])
+l1 = cbind(longitude,latitude)
 Sl1 = Line(l1)
-Sl1a = Line(l1a)
-#Sl2 = Line(l2)
-S1 = Lines(list(Sl1, Sl1a), ID="a")
-#S2 = Lines(list(Sl2), ID="b")
-Sl = SpatialLines(list(S1), proj4string = CRS(proj4WGS84))
-summary(Sl)
-plot(Sl, col = c("red", "blue"))
-
 ```
 
 
 
 ```{r}
 # disconnect database
-#dbDisconnect(movementDB)
+dbDisconnect(movementDB)
 ```
 
 ## References
