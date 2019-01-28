@@ -9,15 +9,16 @@
 # Input: 
 #    trajectories: list of class ltraj
 #    nSimulations: number of simulations per animal
-#    scaling: the caling paramter for the movement length
-#    concentration: the concentration parameter for wrapped normal distribution of turning angles
+#    scaling: the caling paramter for the movement length. DEFAULT: 1
+#    concentration: the concentration parameter for wrapped normal distribution of turning angles. DEFAULT: 0
 #    proj4: proj4string
 #    
 # Output:
 #    list with simulations of class ltraj per animal 
 
-simulateMovement <- function(trajectories, nSimulations, scaling, concentration, proj4){
+simulateMovement <- function(trajectories, nSimulations, scaling = 1, concentration = 0, proj4){
   
+  # cast trajectories to dataframe and extract first row for every animal
   DFtrajectories <- ld(trajectories) %>% group_by(id)
   firstRow <- DFtrajectories %>% filter(row_number()==1)
   
@@ -25,6 +26,8 @@ simulateMovement <- function(trajectories, nSimulations, scaling, concentration,
   simulations <- list()
   
   for (animal in 1:length(trajectories)){
+    
+    # get the parameters for the simulation per animal
     animalName <- id(trajectories)[animal]
     startdate <- summarise(DFtrajectories, startdate = min(date))[,'startdate'][[1]][animal]
     xcoords <- as.data.frame(firstRow[,1])[,'x'][animal]
@@ -35,7 +38,7 @@ simulateMovement <- function(trajectories, nSimulations, scaling, concentration,
     # create date sequence
     dateSeq <- seq(from = startdate, by= timelag, length.out = nSteps)
     
-    # do n simulations
+    # create n simulations per animal and add to list
     simms = list()
     for (simulation in 1:nSimulations){
       simms <- list.append(simms, simm.crw(dateSeq, h = scaling, r = concentration, x0 = c(xcoords, ycoords), id = animalName, proj4string = CRS(proj4)))
