@@ -244,9 +244,11 @@ DEM #
 
 Simulate movement pattern
 ```{r}
-groups <- group_size(groupsCleaned)
-startdate <- 
-nSteps <- 
+startdate <- summarise(groupsCleaned, startdate = min(date))[,'startdate'][[1]]
+firstRow <- groupsCleaned %>% filter(row_number()==1)
+startcoords <- as.data.frame(firstRow[,1:2])
+
+nSteps <- group_size(groupsCleaned)
 
 
 simm.crw()
