@@ -256,13 +256,22 @@ The paired t-test confirmed that there is a significant difference (p-value < 2.
 
 Simulate movement pattern
 ```{r}
-#groups <- group_size(groupsCleaned)
-#startdate <- 
-#nSteps <- 
+# variables
+animalName <- id(movementTrajectories)
+startdate <- summarise(groupsCleaned, startdate = min(date))[,'startdate'][[1]]
+firstRow <- groupsCleaned %>% filter(row_number()==1)
+startcoords <- as.data.frame(firstRow[,1:2])
+nSteps <- group_size(groupsCleaned)
+timelag <- summarize(groupsCleaned, timelag = mean(dt))[,'timelag'][[1]] # mean time between steps in seconds
 
+# create dateseq
+dateSeq <- seq(from = startdate[1], by= timelag[1], length.out = nSteps[1])
 
-#simm.crw()
-
+# one simulation and plot
+sim1 <- simm.crw(dateSeq, h = 1.1, r = 0, x0 = c(658992.4, 5097715), id = animalName[1], proj4string = CRS(proj4zone32))
+mean(sim1[[1]]$dist, na.rm=T)
+plot(DEM)
+lines(sim1[[1]])
 
 ```
 
