@@ -244,6 +244,13 @@ DEM #
 
 Simulate movement pattern
 ```{r}
+groups <- group_size(groupsCleaned)
+startdate <- 
+nSteps <- 
+
+
+simm.crw()
+
 
 ```
 
