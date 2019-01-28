@@ -20,6 +20,7 @@ if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("leaflet")) install.packages("leaflet")
 ```
 
 ```{r}
@@ -33,6 +34,7 @@ library(adehabitatLT)
 library(lubridate)
 library(ggplot2)
 library(gridExtra)
+library(leaflet)
 ```
 
 ```{r}
@@ -243,7 +245,7 @@ heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', n
 heightData <- data.frame(group = rep(c("DEM", "GPS"), each = 10974), height = c(heightDEM$DEM_be75, groupsCleaned$height))
 
 # Perform a paired t-test to compare mean GPS and DEM height
-tTest <- t.test(DEMheight, GPSheight, paired = TRUE, alternative = "two.sided")
+tTest <- t.test(heightDEM$DEM_be75, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
 print("Results of the paired t-test:")
 tTest
 
@@ -272,6 +274,48 @@ sim1 <- simm.crw(dateSeq, h = 1.1, r = 0, x0 = c(658992.4, 5097715), id = animal
 mean(sim1[[1]]$dist, na.rm=T)
 plot(DEM)
 lines(sim1[[1]])
+
+```
+
+Visualize using leaflet
+```{r}
+#beestjes aan en uit
+#achtergrond varieren?
+#inzoomen met grotere scope
+
+#epsg32632 <- leafletCRS(crsClass = "L.Proj.CRS", code = "EPSG:332632",
+#  proj4def = "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
+#  resolutions = 2^(13:-1), # 8192 down to 0.5
+#  origin = c(0, 0)
+#)
+#m <- leaflet#(options = leafletOptions(worldCopyJump = F, crs = epsg32632))
+
+#p <- leaflet %>%
+ # addTiles() %>%  # Add default OpenStreetMap map tiles
+#  addProviderTiles('Esri.WorldImagery') # %>% 
+  #setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
+  #addProviderTiles("CartoDB.PositronOnlyLabels") 
+  #addMarkers(data = dfPoints)
+#p  # Print the map
+
+#t <- leaflet(dfPoints) %>% 
+#  setView(lng=11.0367, lat=46.0331, zoom = 11)
+#t
+
+dfPoints <- as.data.frame(groupsCleaned[,1:2])
+
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addProviderTiles('Esri.WorldImagery') %>%
+  setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
+  addProviderTiles("CartoDB.PositronOnlyLabels") # %>% 
+#  addLines
+  #addMarkers(data = dfPoints)
+m  # Print the map
+
+
+crs(DEM) <- sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+
 
 ```
 
