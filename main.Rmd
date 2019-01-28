@@ -296,19 +296,25 @@ Visualize using leaflet
 #  setView(lng=11.0367, lat=46.0331, zoom = 11)
 #t
 
-dfPoints <- as.data.frame(groupsCleaned[,1:2])
+#dfPoints <- as.data.frame(groupsCleaned[,1:2])
+#crs(DEM) <- sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+#leaflet() %>% addTiles() %>%
+#  addRasterImage(r, colors = pal, opacity = 0.8) %>%
+#  addLegend(pal = pal, values = values(r),
+#    title = "Surface temp")
 
 m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
   addProviderTiles('Esri.WorldImagery') %>%
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
   addProviderTiles("CartoDB.PositronOnlyLabels") # %>% 
-#  addLines
+  addLines
   #addMarkers(data = dfPoints)
 m  # Print the map
 
 
-crs(DEM) <- sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+
+
 
 
 ```
