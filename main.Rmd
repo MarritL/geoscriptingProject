@@ -155,8 +155,6 @@ movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 # create trajectories
 movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
 
-# reproject rasters
-#DEM <- projectRaster(DEM, crs=proj4zone32)
 ```
 
 We are curious where "our" roe deer are going! 
