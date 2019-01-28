@@ -20,6 +20,7 @@ if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
+#if(!require("ggpubr")) install.packages("ggpubr")
 ```
 
 ```{r}
@@ -33,6 +34,8 @@ library(adehabitatLT)
 library(lubridate)
 library(ggplot2)
 library(gridExtra)
+#library(devtools)
+#library(ggpubr)
 ```
 
 ```{r}
@@ -236,29 +239,47 @@ The data is ready for the analyses!
 
 Validate height
 ```{r}
-groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
-DEM # 
-# Extract: bereken hoogteverschil
+#groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
+#DEM # 
+
+# Calculate DEM height values at point locations for which GPS height data is available.
+heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
+#heightDiff <- heightDEM$DEM_be75 - groupsCleaned$height
+DEMheight <- heightDEM$DEM_be75
+GPSheight <- groupsCleaned$height
+heightData <- data.frame(group = rep(c("DEM height", "GPS height"), each = 10974), height = c(DEMheight, GPSheight))
+# Compute summary statistics by groups
+summaryHeight <- group_by(heightData, group) %>%
+  summarise(
+    mean = mean(height, na.rm = TRUE),
+    sd = sd(height, na.rm = TRUE)
+  )
+
+tTest <- t.test(DEMheight, GPSheight, paired = TRUE, alternative = "two.sided")
 
 ```
 
 Simulate movement pattern
 ```{r}
+animalName <- id(movementTrajectories)
 startdate <- summarise(groupsCleaned, startdate = min(date))[,'startdate'][[1]]
 firstRow <- groupsCleaned %>% filter(row_number()==1)
 startcoords <- as.data.frame(firstRow[,1:2])
-
 nSteps <- group_size(groupsCleaned)
+timelag <- summarize(groupsCleaned, timelag = mean(dt))[,'timelag'][[1]] # mean time between steps in seconds
 
+dateSeq <- seq(from = startdate[1], by= timelag[1], length.out = nSteps[1])
 
-simm.crw()
-
+sim1 <- simm.crw(dateSeq, h = 1.1, r = 0, x0 = c(658992.4, 5097715), id = animalName[1], proj4string = CRS(proj4zone32))
+mean(sim1[[1]]$dist, na.rm=T)
+plot(DEM)
+lines(sim1[[1]])
 
 ```
 
 ```{r}
 # disconnect database
-dbDisconnect(movementDB)
+#dbDisconnect(movementDB)
 ```
 
 ## References
