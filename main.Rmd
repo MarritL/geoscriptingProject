@@ -236,9 +236,12 @@ The data is ready for the analyses!
 
 Validate height
 ```{r}
-groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
-DEM # 
+#groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
+#DEM # 
+
 # Extract: bereken hoogteverschil
+heightDEM <- extract(DEM, groupsCleaned[,1:2], method='simple', na.rm=TRUE, df=TRUE)
+
 
 ```
 
