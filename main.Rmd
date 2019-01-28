@@ -20,6 +20,7 @@ if (!require("adehabitatLT")) install.packages("adehabitatLT")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
+if(!require("ggpubr")) install.packages("ggpubr")
 ```
 
 ```{r}
@@ -33,6 +34,8 @@ library(adehabitatLT)
 library(lubridate)
 library(ggplot2)
 library(gridExtra)
+library(devtools)
+library(ggpubr)
 ```
 
 ```{r}
@@ -239,27 +242,38 @@ Validate height
 #groupsCleaned # hoogtedata (grouped per animal. Can do ungroup(groupscleaned))
 #DEM # 
 
-# Extract: bereken hoogteverschil
-heightDEM <- extract(DEM, groupsCleaned[,1:2], method='simple', na.rm=TRUE, df=TRUE)
+# Calculate DEM height values at point locations for which GPS height data is available.
+heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
+#heightDiff <- heightDEM$DEM_be75 - groupsCleaned$height
+DEMheight <- heightDEM$DEM_be75
+GPSheight <- groupsCleaned$height
+heightData <- data.frame(group = rep(c("DEM height", "GPS height"), each = 10974), height = c(DEMheight, GPSheight))
+# Compute summary statistics by groups
+summaryHeight <- group_by(heightData, group) %>%
+  summarise(
+    mean = mean(height, na.rm = TRUE),
+    sd = sd(height, na.rm = TRUE)
+  )
 
+tTest <- t.test(DEMheight, GPSheight, paired = TRUE, alternative = "two.sided")
 
 ```
 
 Simulate movement pattern
 ```{r}
-groups <- group_size(groupsCleaned)
-startdate <- 
-nSteps <- 
+#groups <- group_size(groupsCleaned)
+#startdate <- 
+#nSteps <- 
 
 
-simm.crw()
+#simm.crw()
 
 
 ```
 
 ```{r}
 # disconnect database
-dbDisconnect(movementDB)
+#dbDisconnect(movementDB)
 ```
 
 ## References
