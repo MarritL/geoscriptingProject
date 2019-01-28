@@ -247,6 +247,13 @@ heightDEM <- extract(DEM, groupsCleaned[,1:2], method='simple', na.rm=TRUE, df=T
 
 Simulate movement pattern
 ```{r}
+groups <- group_size(groupsCleaned)
+startdate <- 
+nSteps <- 
+
+
+simm.crw()
+
 
 ```
 
