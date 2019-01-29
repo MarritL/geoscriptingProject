@@ -52,7 +52,7 @@ source("R/createSpatialLine.R")
 
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=18LX2hmiYEgcdO1SfzhfzItHx3ii1WKKH"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1WpYQrWbM1JIChZXOYkSnrR8HOHl9XnRZ"
 
 # projections
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -302,23 +302,27 @@ Visualize using leaflet
 #  setView(lng=11.0367, lat=46.0331, zoom = 11)
 #t
 
+
+
+
+########### check if new dem etc. are correct and clip to extent. check if you still get same error non no-missing args. Add layers in leaflet to switch mvoement per animal on and off etc.#########
 crs(landUse) <- sp::CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs")
 test <- leaflet() %>% 
   addTiles() %>% 
-  setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
-  addRasterImage(landUse) 
+  setView(lng=11.0367, lat=46.0331, zoom = 11) 
+test <- addRasterImage(test, landUse) 
 test
 
+plot(landUse)
   
 m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
-  addProviderTiles('Esri.WorldImagery') %>%
-  setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
-  addProviderTiles("CartoDB.PositronOnlyLabels") %>% 
-  addPolylines(data = trajectAgostino)
+
   #addMarkers(data = head(selectedMovementData, n=1000))
   #addMarkers(data = dfPoints)
 m  # Print the map
+
+
 ```
 
 ```{r}
