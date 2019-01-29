@@ -52,7 +52,7 @@ source("R/createSpatialLine.R")
 
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=1WpYQrWbM1JIChZXOYkSnrR8HOHl9XnRZ"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1rX-R5sjqPbX2Z5xvDyZVM-l4RdRYA4HV"
 
 # projections
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -299,8 +299,11 @@ m <- leaflet() %>%
   addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
   addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
   # Overlay groups
-  addMarkers(data = head(selectedMovementData, n=1000), group = 'Agostino') %>% 
-  addMarkers(data = head(selectedMovementData, n=1000), group = 'Allesandra') %>% 
+  addPolylines(data = trajectAgostino, group = 'Agostino') %>% 
+  addPolylines(data = trajectAlessandra, group = 'Agostino') %>% 
+  addPolylines(data = trajectDaniela, group = 'Agostino') %>% 
+  addPolylines(data = trajectDecimo, group = 'Agostino') %>% 
+  addPolylines(data = trajectAgostino, group = 'Agostino') %>% 
   addLayersControl(
     baseGroups = c('Street map', 'Terrain', 'Satellite'),
     overlayGroups = c('Agostino', 'Alessandra'),
