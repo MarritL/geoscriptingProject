@@ -22,6 +22,7 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
 if (!require("leaflet")) install.packages("leaflet")
 if (!require("rlist")) install.packages("rlist")
+if (!require("entropy")) install.packages("entropy")
 ```
 
 ```{r}
@@ -37,6 +38,7 @@ library(ggplot2)
 library(gridExtra)
 library(leaflet)
 library(rlist)
+library(entropy)
 ```
 
 ```{r}
@@ -319,6 +321,52 @@ m
 # Extract altitude values of simulations from DEM. 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
+```
+
+```{r}
+# per dier
+#simElAgostino <- simulationElevations[simulationElevations$animal == 'Agostino',]
+#DEMElAgostino <- heightDEM[heightDEM$animal == 'Agostino',]
+
+#boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
+
+#boxEl <- ggplot(simulationElevations$rasterVal, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + #theme(legend.position = "none") + ggtitle("x-coordinates of locations")
+
+#simulations <- simulationElevations
+#animalNames <- unique(simulations$animal)
+  
+#for (animalname in animalNames){
+#    simulationsAnimal <- simulations %>% filter(animal == animalname)
+#    numberSimulations <- unique(simulationsAnimal$nsim)
+#}
+
+#data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$elevation, groupsCleaned$height))
+
+# <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
+#trajectories <- dl(groups)
+
+#Visualize
+#boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
+
+# comparison of means
+# comparison of variance
+# second order polynomial (negative)
+# entropy of a series of bits
+# run.tests
+```
+
+```{r}
+simAgostino <- simulationElevations[simulationElevations$animal == 'Agostino',]
+DEMAgostino <- heightDEM[heightDEM$animal == 'Agostino',]
+
+# Entropy returns an estimate of the Shannon entropy.
+entropySimAgostino <- entropy(simAgostino$rasterVal, method = "ML", unit = "log2")
+print(paste("The entropy of the simulated altitude for", as.character(simAgostino$animal[1]), "is: ", entropySimAgostino))
+
+entropyDEMAgostino <- entropy(DEMAgostino$rasterVal, method = "ML", unit = "log2")
+print(paste("The entropy of the recorded altitude for", as.character(simAgostino$animal[1]), "is: ", entropyDEMAgostino))
+
+
 ```
 
 ```{r}
