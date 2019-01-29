@@ -318,7 +318,7 @@ m
 ```{r}
 # Extract altitude values of simulations from DEM. 
 simulationElevations <- extractRasterValues(DEM, simulations)
-
+simulationLandUse <- extractRasterValues(landUse, simulations)
 ```
 
 ```{r}
