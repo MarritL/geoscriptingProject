@@ -51,7 +51,7 @@ source("R/simulateMovement.R")
 
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=16IRkTgB5v0iZFPaJI_DnVSDeGYrbnHTL"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1WpYQrWbM1JIChZXOYkSnrR8HOHl9XnRZ"
 
 # projections
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -316,13 +316,15 @@ plot(landUse)
   
 m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
-  addProviderTiles('Esri.WorldImagery') %>%
-  setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
-  addProviderTiles("CartoDB.PositronOnlyLabels") %>% 
-  addPolylines(data = Sl1)
+  addProviderTiles('Esri.WorldImagery') %>% 
+  addProviderTiles('Stamen.Terrain') %>% 
+  addProviderTiles('Stamen.TopOSMRelief') %>% 
+  setView(lng=11.0367, lat=46.0331, zoom = 11) #%>% 
   #addMarkers(data = head(selectedMovementData, n=1000))
   #addMarkers(data = dfPoints)
 m  # Print the map
+
+
 ```
 
 ```{r}
