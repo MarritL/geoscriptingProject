@@ -44,6 +44,7 @@ library(rlist)
 source("R/retrieveData.R")
 source("R/saveDataInDB.R")
 source("R/simulateMovement.R")
+source("R/createSpatialLine.R")
 ```
 
 ```{r}
@@ -314,24 +315,24 @@ m <- leaflet() %>%
   addProviderTiles('Esri.WorldImagery') %>%
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>% 
   addProviderTiles("CartoDB.PositronOnlyLabels") %>% 
-  addPolylines(data = Sl1)
+  addPolylines(data = trajectAgostino)
   #addMarkers(data = head(selectedMovementData, n=1000))
   #addMarkers(data = dfPoints)
 m  # Print the map
 ```
 
 ```{r}
-# create spatial lines between the animal locations
+# slecect distinct animals
+animalNames <- distinct(groupsCleaned, id)[[1]]
 
-# select per animal
-animal1 <- groupsCleaned %>% filter(id == "Agostino")
-coords <- animal1[,c("x","y")]
-zone32animal1 <- SpatialPointsDataFrame(coords = coords, data = animal1, proj4string = CRS(proj4zone32))
-mercatorAnimal1 <- spTransform(zone32animal1, CRS(proj4WGS84))
-longitude <- (mercatorAnimal1@coords[,"x"])
-latitude <- (mercatorAnimal1@coords[,"y"])
-l1 = cbind(longitude,latitude)
-Sl1 = Line(l1)
+for (animal in animalNames){
+  # get location data from nth animal
+  locationdata <- groupsCleaned[(groupsCleaned$id == animal),]
+  
+  # create spatial line
+  assign(paste0("traject",animal), createSpatialLine(locationdata = locationdata, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal))
+}
+
 ```
 
 
