@@ -48,6 +48,7 @@ source("R/saveDataInDB.R")
 source("R/simulateMovement.R")
 source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
+source("R/plotProfiles.R")
 ```
 
 ```{r}
@@ -255,10 +256,10 @@ heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='sim
 heightDEM$animal <- unlist(groupsCleaned[,"id"])
 colnames(heightDEM) <- c("ID", "rasterVal", "animal")
 
-heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$elevation, groupsCleaned$height))
+heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$rasterVal, groupsCleaned$height))
 
 # Perform a paired t-test to compare mean GPS and DEM height
-tTest <- t.test(heightDEM$elevation, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
+tTest <- t.test(heightDEM$rasterVal, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
 print("Results of the paired t-test:")
 tTest
 
