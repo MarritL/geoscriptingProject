@@ -71,11 +71,10 @@ retrieveData(environmentalURL, folder)
 
 ```{r}
 # Load environmental data to global environment
-fileList <- list.files(path = "data/GoogleEarthData", pattern = glob2rx('*.tif'), full.names = TRUE)
-DEM <- raster(fileList[1])
-landsat <- brick(fileList[2])
-landUse <- raster(fileList[3])
-slope <- raster(fileList[4])
+DEM <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*DEM*.tif'), full.names = TRUE))
+landsat <- brick(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*Landsat*.tif'), full.names = TRUE))
+landUse <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*LandUse*.tif'), full.names = TRUE))
+slope <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*Slope*.tif'), full.names = TRUE))
 ```
 
 We use an example dataset of roe deer movement from a book about spatial database management (Urbano and Cagnacci, 2014). The data are thus designed for use in a database and set up as interlinking datasets. Direct use in R is possible, but undesirable due to a lack of structure. Therefore, we set up an SQLite database in memory to process the data.
