@@ -251,7 +251,7 @@ The altitude measurement of the GPS data needs to be validated through a compari
 # Calculate DEM height values at point locations for which GPS height data is available.
 heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
 heightDEM$animal <- unlist(groupsCleaned[,"id"])
-colnames(heightDEM) <- c("ID", "elevation", "animal")
+colnames(heightDEM) <- c("ID", "rasterVal", "animal")
 
 heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$elevation, groupsCleaned$height))
 
@@ -319,6 +319,7 @@ m
 # Extract altitude values of simulations from DEM. 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
+plotProfiles(simulationElevations, heightDEM)
 ```
 
 ```{r}
