@@ -8,27 +8,32 @@
 #    raster: the raster from which values are to be extracted
 #    simulations: a list with point locations of animal movement structured as a list in a list in a list
 # Output:
-#    dataframe with extracted raster values per point location
+#    list with matrix for every animal, every column of matrix contains extracted raster values per simulation
 
 extractRasterValues <- function(raster, simulations){
-
-  # Initialize empty data frame  
-  df <- data.frame(ID = numeric(), rasterVal = numeric(), nSim = integer(), animal = character())
+  
+  # Initialize empty list to store matrices
+  rasterValuesMatrixlist <- list()
   
   # Access the inner list to obtain point locations of animal movement
   for (animal in 1:length(simulations)){
+    
+    # create empty matrix to store extracted values
+    matrix <- matrix(nrow = nrow(simulations[[animal]][[1]][[1]]), ncol = length(simulations[[animal]]))
+    
     for (nSim in 1:length(simulations[[animal]])){
     traject <- simulations[[animal]][[nSim]][[1]]
     
     # Extract raster values at point locations
      rasterValues <- extract(raster, traject[,c("x","y")], method='simple', na.rm=TRUE, df=TRUE)
-     rasterValues$nSim <- nSim # add column for number of simulations
-     rasterValues$animal <- id(simulations[[animal]][[nSim]]) # add animal name
-     colnames(rasterValues) <-  c("ID", "rasterVal", "nSim", "animal") # add column names to bind to df
+     colnames(rasterValues) <-  c("ID", "rasterVal")
      
-     # Bind rasterValues to dataframe
-     df <- rbind(df, rasterValues)
+     # add to new column in matrix
+     matrix[,nSim] <- rasterValues$rasterVal
+     
     }
+    # add matrix to list
+    rasterValuesMatrixlist <- list.append(rasterValuesMatrixlist, matrix)
   }
-  return(df)
+  return(rasterValuesMatrixlist)
 } 
