@@ -249,12 +249,14 @@ Before we start our movement analysis, we will first have a look at the reliabil
 The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the measurements.
 ```{r}
 # Calculate DEM height values at point locations for which GPS height data is available.
-heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
+heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
+heightDEM$animal <- unlist(groupsCleaned[,"id"])
+colnames(heightDEM) <- c("ID", "elevation", "animal")
 
-heightData <- data.frame(group = rep(c("DEM", "GPS"), each = 10974), height = c(heightDEM$DEM_be75, groupsCleaned$height))
+heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$elevation, groupsCleaned$height))
 
 # Perform a paired t-test to compare mean GPS and DEM height
-tTest <- t.test(heightDEM$DEM_be75, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
+tTest <- t.test(heightDEM$elevation, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
 print("Results of the paired t-test:")
 tTest
 
@@ -315,7 +317,7 @@ m
 
 ```{r}
 # Extract altitude values of simulations from DEM. 
-extractRasterValues(DEM, simulations)
+simulationElevations <- extractRasterValues(DEM, simulations)
 
 ```
 
