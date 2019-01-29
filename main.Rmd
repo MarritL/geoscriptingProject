@@ -317,6 +317,7 @@ m
 ```{r}
 # Extract altitude values of simulations from DEM. 
 extractRasterValues(DEM, simulations)
+extractRasterValues(landUse, simulations)
 
 ```
 
