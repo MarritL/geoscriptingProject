@@ -45,6 +45,7 @@ source("R/retrieveData.R")
 source("R/saveDataInDB.R")
 source("R/simulateMovement.R")
 source("R/createSpatialLine.R")
+source("R/extractRasterValues.R")
 ```
 
 ```{r}
@@ -245,7 +246,7 @@ grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 The data is ready for the analyses!
 
 Before we start our movement analysis, we will first have a look at the reliability of our data.
-The height measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean height measurements differ significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the height measurements.
+The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the measurements.
 ```{r}
 # Calculate DEM height values at point locations for which GPS height data is available.
 heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
@@ -262,7 +263,7 @@ boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = 
 
 ```
 
-The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean heights between the GPS height measurement and the DEM height values. The mean difference between the two height measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS height measurements are not always reliable. Therefore, we will use DEM height measurement for our further analysis.  
+The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean altitude between the GPS height measurement and the DEM height values. The mean difference between the two measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS altitude measurements are not always reliable. Therefore, we will use DEM altitude measurement for our further analysis.  
 
 ```{r}
 # number of simulations per animal
@@ -313,30 +314,8 @@ m
 ```
 
 ```{r}
-#Extract hoogte uit DEM met punten van simulaties (simulations). 
-
-for (animal in length(simulations)){
-  for (nSim in length(simulations[[animal]])){
-    traject <- simulations[[animal]][[nSim]][[1]]
-    
-    heightSim <- extract(DEM, traject[,c("x","y")], method='simple', na.rm=TRUE, df=TRUE)
-    heightSim$nSim <- nSim
-    heightSim$animal <- id(simulations[[animal]][[nSim]])
-  }
-}
-
-
-animals
-heightSimulations <- 
-
-# Van trajectories naar dataframe: ld.
-
-# Per diertje: 
-# Calculate DEM height values at point locations for which GPS height data is available.
-heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
-
-heightData <- data.frame(group = rep(c("DEM", "GPS"), each = 10974), height = c(heightDEM$DEM_be75, groupsCleaned$height))
-
+# Extract altitude values of simulations from DEM. 
+extractRasterValues(DEM, simulations)
 
 ```
 
