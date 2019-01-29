@@ -48,6 +48,7 @@ source("R/saveDataInDB.R")
 source("R/simulateMovement.R")
 source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
+source("R/plotProfiles.R")
 ```
 
 ```{r}

@@ -12,30 +12,20 @@
 
 plotProfiles <- function(simulations, trajectories){
   
-  simulations <- simulationElevations
-  
-  
   # make vector with different animals to loop over
-  animalNames <- unique(simulations$animal)
+  animalNames <- unique(trajectories$animal)
   
-  for (animalname in animalNames){
-    # filter the simulations and trajetory based on animalname
-    realAnimal <- trajectories %>% filter(animal == animalname)
-    simulationsAnimal <- simulations %>% filter(animal == animalname)
+  for (animal in 1:length(animalNames)){
+    print(animal)
+    matrix <- simulations[[animal]]
     
-    # plot real trajectory
-    plot(realAnimal[,'rasterVal'], col = 'red', type = 'l')
+    # create sequence for x axis
+    timeseq <- seq(from = 1, by = 1, length.out = nrow(matrix))
     
-    # make vector with number of simulations to loop over
-    numberSimulations <- unique(simulationsAnimal$nSim)
-    
-    for (simulation in numberSimulations){
-      # filter the simulations based on number of the simulation
-      oneSimulation <- simulationsAnimal %>% filter(nSim == simulation)
-      # add to plot
-      lines(oneSimulation[,'rasterVal'], col = 'grey')
-    }
-    # add line of real trajectory in red on top
-    lines(realAnimal[,'rasterVal'], col = 'red', type = 'l')
+    # create plot
+    #png()
+    matplot(timeseq, matrix, type='l', xlab='Points in time', ylab='Elevation', col = 'grey', lty = 1, main = paste("Simulated and real trajectory of", animalNames[animal]))
+    #dev.off()
   }
+
 }
