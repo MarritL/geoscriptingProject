@@ -44,6 +44,7 @@ library(rlist)
 source("R/retrieveData.R")
 source("R/saveDataInDB.R")
 source("R/simulateMovement.R")
+source("R/createSpatialLine.R")
 ```
 
 ```{r}
@@ -276,6 +277,20 @@ plot(DEM)
 lines(simulations[[1]][[1]][[1]])
 ```
 
+```{r}
+# slecect distinct animals
+animalNames <- distinct(groupsCleaned, id)[[1]]
+
+for (animal in animalNames){
+  # get location data from nth animal
+  locationdata <- groupsCleaned[(groupsCleaned$id == animal),]
+  
+  # create spatial line
+  assign(paste0("traject",animal), createSpatialLine(locationdata = locationdata, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal))
+}
+
+```
+
 Visualize using leaflet
 ```{r}
 m <- leaflet() %>% 
@@ -293,25 +308,7 @@ m <- leaflet() %>%
     options = layersControlOptions(collapsed = FALSE)
   )
 m 
-
-
 ```
-
-```{r}
-# create spatial lines between the animal locations
-
-# select per animal
-animal1 <- groupsCleaned %>% filter(id == "Agostino")
-coords <- animal1[,c("x","y")]
-zone32animal1 <- SpatialPointsDataFrame(coords = coords, data = animal1, proj4string = CRS(proj4zone32))
-mercatorAnimal1 <- spTransform(zone32animal1, CRS(proj4WGS84))
-longitude <- (mercatorAnimal1@coords[,"x"])
-latitude <- (mercatorAnimal1@coords[,"y"])
-l1 = cbind(longitude,latitude)
-Sl1 = Line(l1)
-```
-
-
 
 ```{r}
 # disconnect database
