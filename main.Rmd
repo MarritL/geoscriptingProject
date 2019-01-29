@@ -267,7 +267,7 @@ The paired t-test confirmed that there is a significant difference (p-value < 2.
 
 ```{r}
 # number of simulations per animal
-nSimulations <- 10   
+nSimulations <- 2   
 
 # perform simulations
 simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
@@ -278,7 +278,7 @@ lines(simulations[[1]][[1]][[1]])
 ```
 
 ```{r}
-# slecect distinct animals
+# select distinct animals
 animalNames <- distinct(groupsCleaned, id)[[1]]
 
 for (animal in animalNames){
@@ -300,17 +300,45 @@ m <- leaflet() %>%
   addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
   addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
   # Overlay groups
-  addPolylines(data = trajectAgostino, group = 'Agostino') %>% 
-  addPolylines(data = trajectAlessandra, group = 'Agostino') %>% 
-  addPolylines(data = trajectDaniela, group = 'Agostino') %>% 
-  addPolylines(data = trajectDecimo, group = 'Agostino') %>% 
-  addPolylines(data = trajectAgostino, group = 'Agostino') %>% 
+  addPolylines(data = trajectAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
+  addPolylines(data = trajectAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
+  addPolylines(data = trajectDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
+  addPolylines(data = trajectDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
+  addPolylines(data = trajectSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
   addLayersControl(
     baseGroups = c('Street map', 'Terrain', 'Satellite'),
-    overlayGroups = c('Agostino', 'Alessandra'),
+    overlayGroups = c('Agostino', 'Alessandra', 'Daniela', 'Decimo', 'Sandro'),
     options = layersControlOptions(collapsed = FALSE)
   )
 m 
+```
+
+```{r}
+#Extract hoogte uit DEM met punten van simulaties (simulations). 
+
+for (animal in length(simulations)){
+  for (nSim in length(simulations[[animal]])){
+    traject <- simulations[[animal]][[nSim]][[1]]
+    
+    heightSim <- extract(DEM, traject[,c("x","y")], method='simple', na.rm=TRUE, df=TRUE)
+    heightSim$nSim <- nSim
+    heightSim$animal <- id(simulations[[animal]][[nSim]])
+  }
+}
+
+
+animals
+heightSimulations <- 
+
+# Van trajectories naar dataframe: ld.
+
+# Per diertje: 
+# Calculate DEM height values at point locations for which GPS height data is available.
+heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,1:2]), method='simple', na.rm=TRUE, df=TRUE)
+
+heightData <- data.frame(group = rep(c("DEM", "GPS"), each = 10974), height = c(heightDEM$DEM_be75, groupsCleaned$height))
+
+
 ```
 
 ```{r}
