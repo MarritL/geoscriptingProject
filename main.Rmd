@@ -394,6 +394,36 @@ grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]]
 ```{r}
 summaryStats <- sumStats(simElCombi, animalNames)
 
+# initialize an empty dataframe. Loop over rec and put into column. Loop over sim and put into seperate column.
+# indexing in loop. 
+
+df <- data.frame(meanrec = c(0, 0, 0, 0, 0))
+                 
+  for (animal in summaryStats){
+    noSim <- ncol(animal)-1
+    recordedmean <- summaryStats[[animal]][1,1]
+    simulatedmeans <-  summaryStats[[animal]][1,2:ncol(summaryStats[[1]])]
+  }
+df[,1] <- recordedmean
+df[,2] <- simulatedmeans
+
+
+meanrec1 <- summaryStats[[1]][1,1]
+meanrec2 <- summaryStats[[2]][1,1]
+meanrec3 <- summaryStats[[3]][1,1]
+meanrec4 <- summaryStats[[4]][1,1]
+meanrec5 <- summaryStats[[5]][1,1]
+
+meansim1 <- summaryStats[[1]][1,2:ncol(summaryStats[[1]])]
+meansim2 <- summaryStats[[2]][1,2:ncol(summaryStats[[2]])]
+meansim3 <- summaryStats[[3]][1,2:ncol(summaryStats[[3]])]
+meansim4 <- summaryStats[[4]][1,2:ncol(summaryStats[[4]])]
+meansim5 <- summaryStats[[5]][1,2:ncol(summaryStats[[5]])]
+meansrec <- c(meanrec1, meanrec2, meanrec3, meanrec4, meanrec5)
+meanssim <- c(meansim1, meansim2, meansim3, meansim4, meansim5)
+
+plot(meansrec, col = c('red'))
+plot(meanssim, col = c('grey'), add = TRUE)
 
 ```
 
