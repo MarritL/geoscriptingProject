@@ -49,6 +49,7 @@ source("R/simulateMovement.R")
 source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
 source("R/plotProfiles.R")
+source("R/combineSimTrack.R")
 ```
 
 ```{r}
@@ -326,21 +327,13 @@ plotProfiles(simulationElevations, heightDEM)
 ```
 
 ```{r}
+# Combine recorded and simulated height data in one matrix
+combineSimTrack()
 
-#heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
-#heightDEM$animal <- unlist(groupsCleaned[,"id"])
-# animalSimEl <- simulationElevations %>% filter(animal = animalNames[animalname])
+```
 
-animalNames <- unique(heightDEM$animal)
-
-for (animal in 1:length(animalNames)){
-    print(animal)
-    # filter elevation data per animal from simulations
-    animalEl <- heightDEM %>% filter(animal == animalNames[animal])
-    
-    simulationElevations[[animal]] <- cbind(simulationElevations[[animal]], animalEl$rasterVal)
-}    
-  
+```{r}  
+# Visualize the difference between recorded and simulated data in boxplots
 boxplot.matrix(simulationElevations[[1]], use.cols = TRUE)
 test3 <- stack(as.data.frame(simulationElevations[[1]])) # add colnames
 ggplot(test3) +
