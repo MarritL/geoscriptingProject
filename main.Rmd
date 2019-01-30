@@ -60,7 +60,7 @@ source("R/addLegend.R")
 
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=1HrcmkbPJvKdzEj_xhXEVLiSHz4vJmr1n"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1nb7q8TQGAkzTcGtSMS0Nig_DAhB2lClJ"
 
 landUseLegendURL  = "https://www.eea.europa.eu/data-and-maps/data/corine-land-cover-2006-raster-1/corine-land-cover-classes-and/clc_legend.csv/at_download/file"
 
@@ -392,6 +392,7 @@ grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]]
 
 ```{r}
 summaryStats <- sumStats(simElCombi, animalNames)
+
 
 ```
 
