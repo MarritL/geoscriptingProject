@@ -340,8 +340,14 @@ plotProfiles(simulationElevations, heightDEM)
 # Visualize the difference between recorded and simulated data in boxplots
 boxplot.matrix(simulationElevations[[1]], use.cols = TRUE)
 test3 <- stack(as.data.frame(simulationElevations[[1]])) # add colnames
+colnames(test3) <- c("")
+
 ggplot(test3) +
-geom_boxplot(aes(x = ind, y = values))
+  geom_boxplot(aes(x = ind, y = values)) +
+  xlab("Trajectory") +
+  ylab("Elevation (m)") +
+  ggtitle("Comparison of recorded and simulated GPS trajectories")
+  
 ```
 
 ```{r}
