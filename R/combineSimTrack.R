@@ -17,8 +17,13 @@ combineSimTrack <- function(df, animalNames, simEl){
   for (animal in 1:length(animalNames)){
     # filter recorded values per animal from dataframe
     animalEl <- df[df$animal == animalNames[animal],]
+    
+    colNames <- colnames(simEl[[animal]])
+    
     # add recorded values to simulations matrix
     simEl[[animal]] <- cbind(animalEl$rasterVal, simEl[[animal]])
+    
+    colnames(simEl[[animal]]) <- c("Rec", colNames)
   }
   return(simEl)
 }
