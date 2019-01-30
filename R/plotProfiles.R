@@ -2,13 +2,13 @@
 # 28th January 2019
 # Final Project, Geoscripting, Wageningen University 
 
-# Function to plot the altitude of the simulations and the animal
+# Function to plot the altitude of the simulations and the animal tracks
 #
 # Input: 
 #   simulations: dataframe with extracted raster values per point location as output from extractRasterValues
 #   trajectories: dataframe with extracted raster values per point location  
 # Output:
-#    
+#   plot of simulated trajectories in grey and real trajectory in red per animal
 
 plotProfiles <- function(simulations, trajectories){
   
