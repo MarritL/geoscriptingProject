@@ -320,16 +320,19 @@ m
 ```
 
 ```{r}
-# Extract altitude values of simulations from DEM. 
+# Extract altitude and landuse values of simulations 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
-plotProfiles(simulationElevations, heightDEM)
 ```
 
 ```{r}
 # Combine recorded and simulated height data in one matrix
 combineSimTrack()
 
+```
+
+```{r}
+plotProfiles(simulationElevations, heightDEM)
 ```
 
 ```{r}  
