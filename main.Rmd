@@ -50,6 +50,7 @@ source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
 source("R/plotProfiles.R")
 source("R/combineSimTrack.R")
+source("R/boxplotProfiles.R")
 ```
 
 ```{r}
@@ -337,16 +338,10 @@ plotProfiles(simElCombi, animalNames)
 
 ```{r}  
 # Visualize the difference between recorded and simulated data in boxplots
-boxplot.matrix(simElCombi[[1]], use.cols = TRUE)
-DFsimElCombi <- stack(as.data.frame(simElCombi[[1]])) # add colnames
-#colnames(test3) <- c("")
+boxplotlist <- boxplotProfiles(simElCombi, animalNames, xlab, ylab, title, addName = TRUE) 
 
-ggplot(DFsimElCombi) +
-  geom_boxplot(aes(x = ind, y = values)) +
-  xlab("Trajectory") +
-  ylab("Elevation (m)") +
-  ggtitle("Comparison of recorded and simulated GPS trajectories")
-  
+grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]],boxplotlist[[5]], layout_matrix = rbind(c(1,2), c(3,4),c(5,6)))
+boxplotlist[[1]]
 ```
 
 ```{r}

@@ -5,14 +5,12 @@
 # Function to plot the altitude of the simulations and the animal tracks
 #
 # Input: 
-#   simulations: dataframe with extracted raster values per point location as output from extractRasterValues
-#   trajectories: dataframe with extracted raster values per point location  
+#   simulations: list with matrices with extracted raster values per point location as output from combineSimTrack
+#   animalNames: vector with animalNames
 # Output:
 #   plot of simulated trajectories in grey and real trajectory in red per animal
 
 plotProfiles <- function(simulations, animalNames){
-  
-  #simulations <- simElCombi
   
   for (animal in 1:length(animalNames)){
     
