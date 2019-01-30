@@ -325,7 +325,6 @@ simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
 ```
 
-
 ```{r}
 # Combine recorded and simulated height data in one matrix
 simElCombi <- combineSimTrack(heightDEM, animalNames, simulationElevations)
@@ -348,6 +347,11 @@ ggplot(test3) +
   ylab("Elevation (m)") +
   ggtitle("Comparison of recorded and simulated GPS trajectories")
   
+```
+
+```{r}
+# Calculate summary statistics across simulations
+sims <- simEl[[animal]][,2:ncol(simEl[[animal]])]
 ```
 
 ```{r}
