@@ -20,6 +20,7 @@ extractRasterValues <- function(raster, simulations){
     
     # create empty matrix to store extracted values
     matrix <- matrix(nrow = nrow(simulations[[animal]][[1]][[1]]), ncol = length(simulations[[animal]]))
+    columnNames <- as.character()
     
     for (nSim in 1:length(simulations[[animal]])){
     traject <- simulations[[animal]][[nSim]][[1]]
@@ -30,8 +31,11 @@ extractRasterValues <- function(raster, simulations){
      
      # add to new column in matrix
      matrix[,nSim] <- rasterValues$rasterVal
+     columnNames <- c(columnNames, paste0("Sim", nSim))
      
     }
+    # add column names
+    colnames(matrix) <- columnNames
     # add matrix to list
     rasterValuesMatrixlist <- list.append(rasterValuesMatrixlist, matrix)
   }

@@ -326,25 +326,16 @@ plotProfiles(simulationElevations, heightDEM)
 ```
 
 ```{r}
-
-#heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
-#heightDEM$animal <- unlist(groupsCleaned[,"id"])
-# animalSimEl <- simulationElevations %>% filter(animal = animalNames[animalname])
-
-animalNames <- unique(heightDEM$animal)
-
-for (animal in 1:length(animalNames)){
-    print(animal)
-    # filter elevation data per animal from simulations
-    animalEl <- heightDEM %>% filter(animal == animalNames[animal])
-    
-    simulationElevations[[animal]] <- cbind(simulationElevations[[animal]], animalEl$rasterVal)
-}    
-  
 boxplot.matrix(simulationElevations[[1]], use.cols = TRUE)
 test3 <- stack(as.data.frame(simulationElevations[[1]])) # add colnames
+colnames(test3) <- c("")
+
 ggplot(test3) +
-geom_boxplot(aes(x = ind, y = values))
+  geom_boxplot(aes(x = ind, y = values)) +
+  xlab("Trajectory") +
+  ylab("Elevation (m)") +
+  ggtitle("Comparison of recorded and simulated GPS trajectories")
+  
 ```
 
 ```{r}
