@@ -12,18 +12,18 @@
 #   matrix with recorded and simulated altitude values (one column per simulation), grouped by animal
 #    
 
-combineSimTrack <- function(df, animalNames, simEl){
+combineSimTrack <- function(df, animalNames, simVal){
   
   for (animal in 1:length(animalNames)){
     # filter recorded values per animal from dataframe
     animalVal <- df[df$animal == animalNames[animal],]
     
-    colNames <- colnames(simEl[[animal]])
+    colNames <- colnames(simVal[[animal]])
     
     # add recorded values to simulations matrix
     simVal[[animal]] <- cbind(animalVal$rasterVal, simVal[[animal]])
     
-    colnames(simEl[[animal]]) <- c("Rec", colNames)
+    colnames(simVal[[animal]]) <- c("Rec", colNames)
   }
   return(simVal)
 }
