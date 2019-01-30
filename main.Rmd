@@ -320,7 +320,7 @@ m
 ```
 
 ```{r}
-# Extract altitude values of simulations from DEM. 
+# Extract altitude and landuse values of simulations 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
 ```
@@ -332,16 +332,16 @@ simElCombi <- combineSimTrack(heightDEM, animalNames, simulationElevations)
 ```
 
 ```{r}
-plotProfiles(simulationElevations, heightDEM)
+plotProfiles(simElCombi, animalNames)
 ```
 
 ```{r}  
 # Visualize the difference between recorded and simulated data in boxplots
-boxplot.matrix(simulationElevations[[1]], use.cols = TRUE)
-test3 <- stack(as.data.frame(simulationElevations[[1]])) # add colnames
-colnames(test3) <- c("")
+boxplot.matrix(simElCombi[[1]], use.cols = TRUE)
+DFsimElCombi <- stack(as.data.frame(simElCombi[[1]])) # add colnames
+#colnames(test3) <- c("")
 
-ggplot(test3) +
+ggplot(DFsimElCombi) +
   geom_boxplot(aes(x = ind, y = values)) +
   xlab("Trajectory") +
   ylab("Elevation (m)") +

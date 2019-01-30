@@ -10,13 +10,12 @@
 # Output:
 #   plot of simulated trajectories in grey and real trajectory in red per animal
 
-plotProfiles <- function(simulations, trajectories){
+plotProfiles <- function(simulations, animalNames){
   
-  # make vector with different animals to loop over
-  animalNames <- unique(trajectories$animal)
+  #simulations <- simElCombi
   
   for (animal in 1:length(animalNames)){
-    print(animal)
+    
     matrix <- simulations[[animal]]
     
     # create sequence for x axis
@@ -24,7 +23,8 @@ plotProfiles <- function(simulations, trajectories){
     
     # create plot
     #png()
-    matplot(timeseq, matrix, type='l', xlab='Points in time', ylab='Elevation', col = 'grey', lty = 1, main = paste("Simulated and real trajectory of", animalNames[animal]))
+    matplot(timeseq, matrix[,2:ncol(matrix)], type='l', xlab='Points in time', ylab='Elevation', col = "grey", lty = 1, main = paste("Simulated and real trajectory of", animalNames[animal]))
+    matlines(timeseq, matrix[,1], type='l', col = "red", lty = 1)
     #dev.off()
   }
 
