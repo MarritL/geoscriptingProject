@@ -192,7 +192,7 @@ dataframeTrajectories <- ld(movementTrajectories)
 groups <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
 trajectories <- dl(groups)
 
-#plot
+# plot
 p1 <- ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
 p2 <- ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
 p3 <- ggplot(groups, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
@@ -206,6 +206,7 @@ grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 These boxplots show the outliers very clearly in the x and y-coordinates as well as the distance and time between relocations. In previous steps we removed some measurements with NA's for latitude and longitude to be able to convert the dataframe to a spatial dataframe. As a result, the time between relocations is not 100% accurate. We will therefore use only x-coordinates, y-coordinates and distance between relations to clean our dataset. Tresholds for the x and y-coordinates are based purely on these boxplots. To determine the treshold for the distance we take a look at the distribution of steplengths. 
 
 ```{r}
+# plot histograms of distance between location points
 par(mfrow=c(3, 2))
 for (i in 1:length(id(movementTrajectories))){
   hist(movementTrajectories[[i]]$dist, xlim = c(0, 5000), ylim = c(0, 1500), breaks = seq(0, 1000000, by = 100), xlab = "distance (m)", main = paste("Distance between relocations by", id(movementTrajectories)[i]))
@@ -253,36 +254,35 @@ The data is ready for the analyses!
 Before we start our movement analysis, we will first have a look at the reliability of our data.
 The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the measurements.
 ```{r}
-# Calculate DEM height values at point locations for which GPS height data is available.
+# calculate DEM height values at point locations for which GPS height data is available.
 heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
 heightDEM$animal <- unlist(groupsCleaned[,"id"])
 colnames(heightDEM) <- c("ID", "rasterVal", "animal")
 
 heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$rasterVal, groupsCleaned$height))
 
-# Perform a paired t-test to compare mean GPS and DEM height
+# perform a paired t-test to compare mean GPS and DEM height
 tTest <- t.test(heightDEM$rasterVal, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
 print("Results of the paired t-test:")
 tTest
 
-#Visualize
+# visualize
 boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
 
 ```
 
 The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean altitude between the GPS height measurement and the DEM height values. The mean difference between the two measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS altitude measurements are not always reliable. Therefore, we will use DEM altitude measurement for our further analysis.  
 
+Now we extract the landuse values from the recorded trajectories. 
+
 ```{r}
-# number of simulations per animal
-nSimulations <- 2   
-
-# perform simulations
-simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
-
-# plot example
-plot(DEM)
-lines(simulations[[1]][[1]][[1]])
+# extract landuse values of recorded trajectories
+landuseTracks <- extract(landUse, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
+landuseTracks$animal <- unlist(groupsCleaned[,"id"])
+colnames(landuseTracks) <- c("ID", "rasterVal", "animal")
 ```
+
+For visualization purposes we need to create Spatial Lines of the recorded trajectories.
 
 ```{r}
 # select distinct animals
@@ -302,11 +302,11 @@ Visualize using leaflet
 ```{r}
 m <- leaflet() %>% 
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
-  # Baselayers
+  # baselayers
   addTiles(group = 'Street map') %>%  
   addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
   addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
-  # Overlay groups
+  # overlay groups
   addPolylines(data = trajectAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
   addPolylines(data = trajectAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
   addPolylines(data = trajectDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
@@ -319,20 +319,37 @@ m <- leaflet() %>%
   )
 m 
 ```
+## Simulations
+In the next section we will start with the simulations of animal trajectories. We will use the simm.crw function of the adehabitatLT package for the simulations. We wrapped this function in the simulateMovement function so that it is easy to specify the number of simulations and save all simulation in an convenient dataformat. The simulations start at the same location as the respective animal, and will have the same length.
 
 ```{r}
-# Extract altitude and landuse values of simulations 
+# number of simulations per animal
+nSimulations <- 2   
+
+# perform simulations
+simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
+
+# plot example of simulated trajectory
+plot(DEM)
+lines(simulations[[1]][[1]][[1]])
+```
+
+```{r}
+# extract altitude and landuse values of simulations 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
 ```
 
 ```{r}
-# Combine recorded and simulated height data in one matrix
+# combine recorded and simulated height data in one matrix
 simElCombi <- combineSimTrack(heightDEM, animalNames, simulationElevations)
-
+simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ```
 
+##Comparison recorded and simulated trajectories
+
 ```{r}
+# plot the profiles of the simulated profiles and the trajectory
 plotProfiles(simElCombi, animalNames)
 ```
 
@@ -342,7 +359,7 @@ xlab <- "Trajectory"
 ylab <- "Elevation (m)"
 title <- "Comparison of recorded and simulated GPS trajectories of"
 
-# Visualize the difference between recorded and simulated data in boxplots
+# visualize the difference between recorded and simulated data in boxplots
 boxplotlist <- boxplotProfiles(simElCombi, animalNames, xlab, ylab, title, addName = TRUE) 
 
 # arrage boxplots

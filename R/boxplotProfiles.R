@@ -1,5 +1,5 @@
 # Authors: Anne-Juul Welsink and Marrit Leenstra
-# 28th January 2019
+# 30th January 2019
 # Final Project, Geoscripting, Wageningen University 
 
 # Function to create boxplots of the simulations and the recoreded animal tracks
