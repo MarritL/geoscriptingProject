@@ -50,6 +50,7 @@ source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
 source("R/plotProfiles.R")
 source("R/combineSimTrack.R")
+source("R/combineSimTrack.R")
 ```
 
 ```{r}
@@ -350,8 +351,8 @@ ggplot(DFsimElCombi) +
 ```
 
 ```{r}
-# Calculate summary statistics across simulations
-sims <- simEl[[animal]][,2:ncol(simEl[[animal]])]
+
+
 ```
 
 ```{r}
@@ -359,6 +360,8 @@ simAgostino <- simulationElevations[simulationElevations$animal == 'Agostino',]
 DEMAgostino <- heightDEM[heightDEM$animal == 'Agostino',]
 
 # Entropy returns an estimate of the Shannon entropy.
+
+
 entropySimAgostino <- entropy(simAgostino$rasterVal, method = "ML", unit = "log2")
 print(paste("The entropy of the simulated altitude for", as.character(simAgostino$animal[1]), "is: ", entropySimAgostino))
 
