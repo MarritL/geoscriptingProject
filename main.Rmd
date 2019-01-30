@@ -363,20 +363,6 @@ simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 plotProfiles(simElCombi, animalNames)
 ```
 
-```{r}  
-# Visualize the difference between recorded and simulated data in boxplots
-boxplot.matrix(simElCombi[[1]], use.cols = TRUE)
-DFsimElCombi <- stack(as.data.frame(simElCombi[[1]])) # add colnames
-#colnames(test3) <- c("")
-
-ggplot(DFsimElCombi) +
-  geom_boxplot(aes(x = ind, y = values)) +
-  xlab("Trajectory") +
-  ylab("Elevation (m)") +
-  ggtitle("Comparison of recorded and simulated GPS trajectories")
-  
-```
-
 ```{r}
 # variables for boxplot 
 xlab <- "Trajectory"
@@ -399,24 +385,22 @@ summaryStats <- sumStats(simElCombi, animalNames)
 ### Landuse
 
 ```{r}
-rasterLandUse <- landUse
-dim(rasterLandUse)
-nrow(rasterLandUse)
-ncol(rasterLandUse)
-hist(rasterLandUse)
-
+# add legend to land use matrix for recorded and simulated data
 simLandCombiDFLegend <- addLegend(simLandCombi, legend = landUseLegend, animalNames = animalNames)
 
-simLandCombiDF <- stack(data.frame(simLandCombi[[1]]))
-simLandCombiDFLegend <- left_join(simLandCombiDF, (landUseLegend), by = c("values" = "GRID_CODE"))
+# loop over the matrices for the different animals
+for (animal in 1:length(animalNames)){
+ 
+  # group based on ind (recorded / number of simulations)
+  groupedLandUseAnimal <- as.data.frame(simLandCombiDFLegend[[animal]])
+  groupedLandUseCount <- groupedLandUseAnimal %>% group_by(ind, LABEL2) %>% summarise(count = n())
+  
+  # create histogram
+  assign(paste0("h",animal),ggplot(data=groupedLandUseCount, aes(x=LABEL2, y=count, fill=ind)) +
+    geom_bar(stat="identity", position=position_dodge()))
+}
 
-par(mfrow=c(2, 2))
-#hist(simLandCombi[[1]][,1], probability = TRUE, breaks = seq(from 0, by = 1, length.out = ))
-hist(simLandCombi[[1]][,2], probability = TRUE)
-hist(simLandCombi[[1]][,3], probability = TRUE)
-par(mfrow=c(1, 1))
-
-unique(landUseLegend$LABEL2)
+grid.arrange(h1,h2,h3,h4,h5, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 
 ```
 
