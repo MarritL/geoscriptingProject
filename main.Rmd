@@ -50,7 +50,7 @@ source("R/createSpatialLine.R")
 source("R/extractRasterValues.R")
 source("R/plotProfiles.R")
 source("R/combineSimTrack.R")
-source("R/combineSimTrack.R")
+source("R/sumStats.R")
 ```
 
 ```{r}
@@ -58,7 +58,7 @@ source("R/combineSimTrack.R")
 
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
-environmentalURL = "https://drive.google.com/uc?export=download&id=1rX-R5sjqPbX2Z5xvDyZVM-l4RdRYA4HV"
+environmentalURL = "https://drive.google.com/uc?export=download&id=1HrcmkbPJvKdzEj_xhXEVLiSHz4vJmr1n"
 
 # projections
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -351,22 +351,12 @@ ggplot(DFsimElCombi) +
 ```
 
 ```{r}
+summaryStats <- sumStats(simElCombi, animalNames)
 
 
 ```
 
 ```{r}
-simAgostino <- simulationElevations[simulationElevations$animal == 'Agostino',]
-DEMAgostino <- heightDEM[heightDEM$animal == 'Agostino',]
-
-# Entropy returns an estimate of the Shannon entropy.
-
-
-entropySimAgostino <- entropy(simAgostino$rasterVal, method = "ML", unit = "log2")
-print(paste("The entropy of the simulated altitude for", as.character(simAgostino$animal[1]), "is: ", entropySimAgostino))
-
-entropyDEMAgostino <- entropy(DEMAgostino$rasterVal, method = "ML", unit = "log2")
-print(paste("The entropy of the recorded altitude for", as.character(DEMAgostino$animal[1]), "is: ", entropyDEMAgostino))
 
 
 ```
