@@ -6,7 +6,7 @@
 #
 # Input: 
 #    raster: the raster from which values are to be extracted
-#    simulations: a list with point locations of animal movement structured as a list in a list in a list
+#    simulations: a list with point locations of animal movement structured as the output from the simulateMovement function
 # Output:
 #    list with matrix for every animal, every column of matrix contains extracted raster values per simulation
 
