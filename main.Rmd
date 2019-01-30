@@ -337,11 +337,16 @@ plotProfiles(simElCombi, animalNames)
 ```
 
 ```{r}  
+# variables for boxplot 
+xlab <- "Trajectory"
+ylab <- "Elevation (m)"
+title <- "Comparison of recorded and simulated GPS trajectories of"
+
 # Visualize the difference between recorded and simulated data in boxplots
 boxplotlist <- boxplotProfiles(simElCombi, animalNames, xlab, ylab, title, addName = TRUE) 
 
+# arrage boxplots
 grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]],boxplotlist[[5]], layout_matrix = rbind(c(1,2), c(3,4),c(5,6)))
-boxplotlist[[1]]
 ```
 
 ```{r}
