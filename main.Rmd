@@ -59,6 +59,7 @@ source("R/boxplotProfiles.R")
 # downloadlinks
 movementDataURL = "extras.springer.com/2014/978-3-319-03742-4/trackingDB_datasets.zip"
 environmentalURL = "https://drive.google.com/uc?export=download&id=1rX-R5sjqPbX2Z5xvDyZVM-l4RdRYA4HV"
+landUseLegendURL  = "https://www.eea.europa.eu/data-and-maps/data/corine-land-cover-2006-raster-1/corine-land-cover-classes-and/clc_legend.csv/at_download/file"
 
 # projections
 proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -67,12 +68,15 @@ proj4Mercator <- "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0
 ```
 
 ```{r}
-# download movement data
+# download movement data and unzip
 folder = "data"
-retrieveData(movementDataURL, folder)
+retrieveData(movementDataURL, folder, unzip = TRUE)
 
-# download environmental data
-retrieveData(environmentalURL, folder)
+# download environmental data and unzip
+retrieveData(environmentalURL, folder, unzip = TRUE)
+
+# download legend for corine land cover (landUse)
+retrieveData(landUseLegendURL, folder, filename = "landUseLegend.csv")
 ```
 
 ```{r}
@@ -81,6 +85,9 @@ DEM <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*DEM*
 landsat <- brick(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*Landsat*.tif'), full.names = TRUE))
 landUse <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*LandUse*.tif'), full.names = TRUE))
 slope <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*Slope*.tif'), full.names = TRUE))
+
+legendFile <- list.files(path = folder, pattern = glob2rx('*.csv'), full.names = TRUE)
+landUseLegend <- read.csv(legendFile)
 ```
 
 We use an example dataset of roe deer movement from a book about spatial database management (Urbano and Cagnacci, 2014). The data are thus designed for use in a database and set up as interlinking datasets. Direct use in R is possible, but undesirable due to a lack of structure. Therefore, we set up an SQLite database in memory to process the data.
@@ -346,7 +353,9 @@ simElCombi <- combineSimTrack(heightDEM, animalNames, simulationElevations)
 simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ```
 
-##Comparison recorded and simulated trajectories
+## Comparison recorded and simulated trajectories
+
+### Elevation
 
 ```{r}
 # plot the profiles of the simulated profiles and the trajectory
@@ -381,6 +390,23 @@ print(paste("The entropy of the recorded altitude for", as.character(DEMAgostino
 
 
 ```
+
+### Landuse
+
+```{r}
+raster <- landUse
+dim(raster)
+nrow(raster)
+ncol(raster)
+hist(raster)
+
+par(mfrow=c(2, 2))
+hist(simLandCombi[[1]][,1], probability = TRUE, breaks = seq(from 0, by = 1, length.out = ))
+hist(simLandCombi[[1]][,2], probability = TRUE)
+hist(simLandCombi[[1]][,3], probability = TRUE)
+par(mfrow=c(1, 1))
+```
+
 
 ```{r}
 # disconnect database
