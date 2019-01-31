@@ -412,39 +412,37 @@ grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]]
 ```
 
 ```{r}
+# calculate summary statistics for the recorded and simulated trajectories
 summaryStats <- sumStats(simElCombi, animalNames)
 
-# initialize an empty dataframe. Loop over rec and put into column. Loop over sim and put into seperate column.
-# indexing in loop. 
+# create empty vectors
+xAxSim <- as.integer()
+meansRec <- as.numeric()
+meansSim <- as.numeric()
+sdRec <- as.numeric()
+sdSim <- as.numeric()
 
-df <- data.frame(meanrec = c(0, 0, 0, 0, 0))
-                 
-  for (animal in summaryStats){
-    noSim <- ncol(animal)-1
-    recordedmean <- summaryStats[[animal]][1,1]
-    simulatedmeans <-  summaryStats[[animal]][1,2:ncol(summaryStats[[1]])]
+# store the summary statistics in a vector for plotting
+for (animal in 1:length(animalNames)){
+  meansRec <- c(meansRec, summaryStats[[animal]][1,1])
+  meansSim <- c(meansSim, summaryStats[[animal]][1,2:ncol(summaryStats[[animal]])])
+  sdRec <- c(sdRec, summaryStats[[animal]][3,1])
+  sdSim <- c(sdSim, summaryStats[[animal]][3,2:ncol(summaryStats[[animal]])])
+  
+  # create an index vector for the x-axis
+  for (col in 1:length(2:ncol(summaryStats[[animal]]))){
+    xAxSim <- c(xAxSim, animal)
   }
-df[,1] <- recordedmean
-df[,2] <- simulatedmeans
+}
 
-
-meanrec1 <- summaryStats[[1]][1,1]
-meanrec2 <- summaryStats[[2]][1,1]
-meanrec3 <- summaryStats[[3]][1,1]
-meanrec4 <- summaryStats[[4]][1,1]
-meanrec5 <- summaryStats[[5]][1,1]
-
-meansim1 <- summaryStats[[1]][1,2:ncol(summaryStats[[1]])]
-meansim2 <- summaryStats[[2]][1,2:ncol(summaryStats[[2]])]
-meansim3 <- summaryStats[[3]][1,2:ncol(summaryStats[[3]])]
-meansim4 <- summaryStats[[4]][1,2:ncol(summaryStats[[4]])]
-meansim5 <- summaryStats[[5]][1,2:ncol(summaryStats[[5]])]
-meansrec <- c(meanrec1, meanrec2, meanrec3, meanrec4, meanrec5)
-meanssim <- c(meansim1, meansim2, meansim3, meansim4, meansim5)
-
-plot(meansrec, col = c('red'))
-plot(meanssim, col = c('grey'), add = TRUE)
-
+# plot
+par(mfrow=c(1,2), xpd = TRUE)
+plot(xAxSim, meansSim, col = c('grey'), main = 'Mean elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
+points(meansRec, col = 'red', pch = 19)
+plot(xAxSim, sdSim, col = c('grey'), ylim = c(100,650), main = 'Standard deviation elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
+points(sdRec, col = 'red', pch = 19)
+legend(-0.8,0, c("Recorded", "Simulated"), col = c("red", "grey"), pch = 19, bty = 'n')
+par(mfrow=c(1,1), xpd = FALSE)
 ```
 
 ### Landuse
@@ -462,6 +460,9 @@ levelplot(DEM, main = "Altitude of recorded and simulated roe deer locations", m
 ```
 
 ```{r}
+# add column to legend with shorter description
+LABEL2split <- strsplit(as.character(landUseLegend$LABEL2), split = " ")
+
 # add legend to land use matrix for recorded and simulated data
 simLandCombiDFLegend <- addLegend(simLandCombi, legend = landUseLegend, animalNames = animalNames)
 
@@ -474,10 +475,12 @@ for (animal in 1:length(animalNames)){
   
   # create histogram
   assign(paste0("h",animal),ggplot(data=groupedLandUseCount, aes(x=LABEL2, y=count, fill=ind)) +
-    geom_bar(stat="identity", position=position_dodge()))
+    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal], "and simulations")) + xlab(NULL) + theme(axis.text.x = element_text(angle = 8, hjust = 1)))
 }
 
-grid.arrange(h1,h2,h3,h4,h5, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
+grid.arrange(h1,h2, layout_matrix = rbind(c(1,1),c(2,2)))
+grid.arrange(h3,h4, layout_matrix = rbind(c(1,1),c(2,2)))
+grid.arrange(h5, layout_matrix = rbind(c(1,1),c(2,2)))
 
 ```
 
