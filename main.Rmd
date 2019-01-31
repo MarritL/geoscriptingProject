@@ -22,7 +22,7 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
 if (!require("leaflet")) install.packages("leaflet")
 if (!require("rlist")) install.packages("rlist")
-if (!require("entropy")) install.packages("entropy")
+if (!require("rasterVis")) install.packages("rasterVis")
 ```
 
 ```{r}
@@ -38,7 +38,7 @@ library(ggplot2)
 library(gridExtra)
 library(leaflet)
 library(rlist)
-library(entropy)
+library(rasterVis)
 ```
 
 ```{r}
@@ -178,6 +178,11 @@ movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 
 # create trajectories
 movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
+
+# and make a dataframe to be able to add height informatin
+dataframeTrajectories <- ld(movementTrajectories)
+groups <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
+trajectories <- dl(groups)
 ```
 
 We are curious where "our" roe deer are going! 
@@ -223,11 +228,6 @@ m
 Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. But how do we define which points are outliers? We look at boxplots of different variables in order to determine a suitable method to identify outliers. 
 
 ```{r}
-# cast back to dataframe
-dataframeTrajectories <- ld(movementTrajectories)
-groups <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
-trajectories <- dl(groups)
-
 # plot
 p1 <- ggplot(groups, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
 p2 <- ggplot(groups, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
@@ -442,15 +442,30 @@ par(mfrow=c(1,1), xpd = FALSE)
 
 ### Landuse
 ```{r}
-# plot elevation in GGplot met simulations/recorded erop?
-# r = raster(xmn=621150,xmx=694170,ymn=5090490,ymx=5109210, nrow = 624, ncol = 2434)
-# DEMmasked <- mask(r, DEM)
-# plot(DEMmasked)
+# variables
+colors <- c("red","blue", "orange", "yellow", "purple")
+names <- list(c("Agostino", "Allessandra", "Daiela", " Decimo", "Sandro"))
 
-library(rasterVis)
+# select theme to plot with right colors
 myTheme=rasterTheme(region=rev(brewer.pal('YlGn', n=9)))
-levelplot(DEM, main = "Altitude of recorded and simulated roe deer locations", margin = FALSE, par.settings=myTheme)
 
+# create plot of DEM with added trajectories
+levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colors), text = names )) + 
+    latticeExtra::layer({
+  trajectAgostinoZone32 <- spTransform(trajectAgostino, CRS(proj4zone32))
+  sp.lines(trajectAgostinoZone32, col = 'red')}) +
+    latticeExtra::layer({
+  trajectAllessandraZone32 <- spTransform(trajectAlessandra, CRS(proj4zone32))
+  sp.lines(trajectAllessandraZone32, col = 'blue')}) +
+    latticeExtra::layer({
+  trajectDanielaZone32 <- spTransform(trajectDaniela, CRS(proj4zone32))
+  sp.lines(trajectDanielaZone32, col = 'orange')}) +
+    latticeExtra::layer({
+  trajectDecimoZone32 <- spTransform(trajectDecimo, CRS(proj4zone32))
+  sp.lines(trajectDecimoZone32, col = 'yellow')}) +
+    latticeExtra::layer({
+  trajectSandroZone32 <- spTransform(trajectSandro, CRS(proj4zone32))
+  sp.lines(trajectSandroZone32, col = 'purple')})
            
 ```
 
