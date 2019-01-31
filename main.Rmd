@@ -23,10 +23,6 @@ if (!require("gridExtra")) install.packages("gridExtra")
 if (!require("leaflet")) install.packages("leaflet")
 if (!require("rlist")) install.packages("rlist")
 if (!require("rasterVis")) install.packages("rasterVis")
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/master
 ```
 
 ```{r}
