@@ -191,6 +191,30 @@ lines(movementTrajectories[[3]], col = 'blue')
 lines(movementTrajectories[[4]], col = 'purple')
 lines(movementTrajectories[[5]], col = 'orange')
 ```
+```{r}
+# leaflet met outliers
+# create spatial lines
+# met outliers: groups
+m <- leaflet() %>% 
+  setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
+  # baselayers
+  addTiles(group = 'Street map') %>%  
+  addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
+  addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
+  # overlay groups
+  addPolylines(data = trajectAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
+  addPolylines(data = trajectAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
+  addPolylines(data = trajectDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
+  addPolylines(data = trajectDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
+  addPolylines(data = trajectSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
+  addLayersControl(
+    baseGroups = c('Street map', 'Terrain', 'Satellite'),
+    overlayGroups = c('Agostino', 'Alessandra', 'Daniela', 'Decimo', 'Sandro'),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+m 
+
+```
 
 Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. We look at boxplots of the different variables to find the best variables to remove these outliers. 
 
@@ -341,6 +365,9 @@ simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSim
 plot(DEM)
 lines(simulations[[1]][[1]][[1]])
 ```
+```{r}
+# Plot simulations op leaflet?
+```
 
 ```{r}
 # extract altitude and landuse values of simulations 
@@ -357,6 +384,9 @@ simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ## Comparison recorded and simulated trajectories
 
 ### Elevation
+```{r}
+# plot elevation in GGplot met simulations/recorded erop?
+```
 
 ```{r}
 # plot the profiles of the simulated profiles and the trajectory
@@ -413,6 +443,9 @@ plot(meanssim, col = c('grey'), add = TRUE)
 ```
 
 ### Landuse
+```{r}
+# plot elevation in GGplot met simulations/recorded erop?
+```
 
 ```{r}
 # add legend to land use matrix for recorded and simulated data
