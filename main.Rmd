@@ -385,6 +385,9 @@ summaryStats <- sumStats(simElCombi, animalNames)
 ### Landuse
 
 ```{r}
+# add column to legend with shorter description
+LABEL2split <- strsplit(as.character(landUseLegend$LABEL2), split = " ")
+
 # add legend to land use matrix for recorded and simulated data
 simLandCombiDFLegend <- addLegend(simLandCombi, legend = landUseLegend, animalNames = animalNames)
 
@@ -397,10 +400,12 @@ for (animal in 1:length(animalNames)){
   
   # create histogram
   assign(paste0("h",animal),ggplot(data=groupedLandUseCount, aes(x=LABEL2, y=count, fill=ind)) +
-    geom_bar(stat="identity", position=position_dodge()))
+    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal], "and simulations")) + xlab(NULL) + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
 }
 
-grid.arrange(h1,h2,h3,h4,h5, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
+grid.arrange(h1,h2, layout_matrix = rbind(c(1,1),c(2,2)))
+grid.arrange(h3,h4, layout_matrix = rbind(c(1,1),c(2,2)))
+grid.arrange(h5, layout_matrix = rbind(c(1,1),c(2,2)))
 
 ```
 
