@@ -19,7 +19,7 @@ sumStats <- function(values, animalNames){
     # create one matrix with per animal. 
     matrix <- matrix(nrow = 3, ncol = ncol(values[[animal]]))
     columnNames <- "rec"
-    rowNames <- c("Mean", "Sd", "Var")
+    rowNames <- c("Mean", "Var", "Sd")
     
     for (column in 1:ncol(values[[animal]])){
       # add row with mean values for recorded values and per simulation
