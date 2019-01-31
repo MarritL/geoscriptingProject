@@ -191,10 +191,25 @@ lines(movementTrajectories[[3]], col = 'blue')
 lines(movementTrajectories[[4]], col = 'purple')
 lines(movementTrajectories[[5]], col = 'orange')
 ```
+
+For visualization purposes we need to create Spatial Lines of the recorded trajectories.
+
 ```{r}
-# leaflet met outliers
-# create spatial lines
-# met outliers: groups
+# select distinct animals
+animalNames <- distinct(groups, id)[[1]]
+
+for (animal in animalNames){
+  # get location data from nth animal
+  locationdatainit <- groups[(groups$id == animal),]
+  
+  # create spatial line
+  assign(paste0("trajectinit",animal), createSpatialLine(locationdata = locationdatainit, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal))
+}
+
+```
+
+An interactive leaflet map allows us to explore the GPS recorded movement of our roe deer, Agostino, Alessandra, Daniela, Decimo, and Sandro.
+```{r}
 m <- leaflet() %>% 
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
   # baselayers
@@ -202,11 +217,11 @@ m <- leaflet() %>%
   addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
   addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
   # overlay groups
-  addPolylines(data = trajectAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
-  addPolylines(data = trajectAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
-  addPolylines(data = trajectDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
-  addPolylines(data = trajectDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
-  addPolylines(data = trajectSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
+  addPolylines(data = trajectinitAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
+  addPolylines(data = trajectinitAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
+  addPolylines(data = trajectinitDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
+  addPolylines(data = trajectinitDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
+  addPolylines(data = trajectinitSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
   addLayersControl(
     baseGroups = c('Street map', 'Terrain', 'Satellite'),
     overlayGroups = c('Agostino', 'Alessandra', 'Daniela', 'Decimo', 'Sandro'),
@@ -314,7 +329,7 @@ landuseTracks$animal <- unlist(groupsCleaned[,"id"])
 colnames(landuseTracks) <- c("ID", "rasterVal", "animal")
 ```
 
-For visualization purposes we need to create Spatial Lines of the recorded trajectories.
+For visualization purposes we now need to create Spatial Lines of the recorded trajectories without outliers.
 
 ```{r}
 # select distinct animals
@@ -330,7 +345,7 @@ for (animal in animalNames){
 
 ```
 
-Visualize using leaflet
+We can now visualize the cleaned movement patterns of our beloved roe deer!
 ```{r}
 m <- leaflet() %>% 
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
@@ -351,6 +366,8 @@ m <- leaflet() %>%
   )
 m 
 ```
+Note! The data might still contain a few wrongly recorded points. For example, we are not sure whether Agostino really visited his aunt in Stravino for a coffee. However, we are not justified to remove these potential outliers on the basis of our previously defined cut-off point. 
+
 ## Simulations
 In the next section we will start with the simulations of animal trajectories. We will use the simm.crw function of the adehabitatLT package for the simulations. We wrapped this function in the simulateMovement function so that it is easy to specify the number of simulations and save all simulation in an convenient dataformat. The simulations start at the same location as the respective animal, and will have the same length.
 
