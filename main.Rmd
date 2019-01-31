@@ -451,10 +451,10 @@ par(mfrow=c(1,1), xpd = FALSE)
 # r = raster(xmn=621150,xmx=694170,ymn=5090490,ymx=5109210, nrow = 624, ncol = 2434)
 # DEMmasked <- mask(r, DEM)
 # plot(DEMmasked)
-library(rasterVis)
-myTheme=rasterTheme(region=brewer.pal('Blues', n=9))
-levelplot(DEM, main = "Altitude of recorded and simulated roe deer locations", margin = FALSE)
 
+library(rasterVis)
+myTheme=rasterTheme(region=rev(brewer.pal('YlGn', n=9)))
+levelplot(DEM, main = "Altitude of recorded and simulated roe deer locations", margin = FALSE, par.settings=myTheme)
 
            
 ```
