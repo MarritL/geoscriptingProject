@@ -532,7 +532,7 @@ to <- c(to,length(landUseLegend$LABEL2))
 rcl <- cbind(from, to, to)
 
 # reclassify
-landUseTest <- reclassify(landuseTest, rcl)
+landUseTest <- reclassify(landUseTest, rcl)
 
 # ratify to get labels
 landUseTest <- ratify(landUseTest)
