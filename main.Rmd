@@ -192,45 +192,6 @@ lines(movementTrajectories[[4]], col = 'purple')
 lines(movementTrajectories[[5]], col = 'orange')
 ```
 
-For visualization purposes we need to create Spatial Lines of the recorded trajectories.
-
-```{r}
-# select distinct animals
-animalNames <- distinct(groups, id)[[1]]
-
-for (animal in animalNames){
-  # get location data from nth animal
-  locationdatainit <- groups[(groups$id == animal),]
-  
-  # create spatial line
-  assign(paste0("trajectinit",animal), createSpatialLine(locationdata = locationdatainit, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal))
-}
-
-```
-
-An interactive leaflet map allows us to explore the GPS recorded movement of our roe deer, Agostino, Alessandra, Daniela, Decimo, and Sandro.
-```{r}
-m <- leaflet() %>% 
-  setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
-  # baselayers
-  addTiles(group = 'Street map') %>%  
-  addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
-  addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
-  # overlay groups
-  addPolylines(data = trajectinitAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
-  addPolylines(data = trajectinitAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
-  addPolylines(data = trajectinitDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
-  addPolylines(data = trajectinitDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
-  addPolylines(data = trajectinitSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
-  addLayersControl(
-    baseGroups = c('Street map', 'Terrain', 'Satellite'),
-    overlayGroups = c('Agostino', 'Alessandra', 'Daniela', 'Decimo', 'Sandro'),
-    options = layersControlOptions(collapsed = FALSE)
-  )
-m 
-
-```
-
 Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. We look at boxplots of the different variables to find the best variables to remove these outliers. 
 
 ```{r}
@@ -329,7 +290,7 @@ landuseTracks$animal <- unlist(groupsCleaned[,"id"])
 colnames(landuseTracks) <- c("ID", "rasterVal", "animal")
 ```
 
-For visualization purposes we now need to create Spatial Lines of the recorded trajectories without outliers.
+For visualization purposes we need to create Spatial Lines of the recorded trajectories.
 
 ```{r}
 # select distinct animals
@@ -345,7 +306,7 @@ for (animal in animalNames){
 
 ```
 
-We can now visualize the cleaned movement patterns of our beloved roe deer!
+Visualize using leaflet
 ```{r}
 m <- leaflet() %>% 
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
@@ -366,8 +327,6 @@ m <- leaflet() %>%
   )
 m 
 ```
-Note! The data might still contain a few wrongly recorded points. For example, we are not sure whether Agostino really visited his aunt in Stravino for a coffee. However, we are not justified to remove these potential outliers on the basis of our previously defined cut-off point. 
-
 ## Simulations
 In the next section we will start with the simulations of animal trajectories. We will use the simm.crw function of the adehabitatLT package for the simulations. We wrapped this function in the simulateMovement function so that it is easy to specify the number of simulations and save all simulation in an convenient dataformat. The simulations start at the same location as the respective animal, and will have the same length.
 
@@ -381,9 +340,6 @@ simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSim
 # plot example of simulated trajectory
 plot(DEM)
 lines(simulations[[1]][[1]][[1]])
-```
-```{r}
-# Plot simulations op leaflet?
 ```
 
 ```{r}
@@ -401,9 +357,6 @@ simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ## Comparison recorded and simulated trajectories
 
 ### Elevation
-```{r}
-# plot elevation in GGplot met simulations/recorded erop?
-```
 
 ```{r}
 # plot the profiles of the simulated profiles and the trajectory
@@ -424,46 +377,16 @@ grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]]
 ```
 
 ```{r}
-# calculate summary statistics for the recorded and simulated trajectories
 summaryStats <- sumStats(simElCombi, animalNames)
 
-# create empty vectors
-xAxSim <- as.integer()
-meansRec <- as.numeric()
-meansSim <- as.numeric()
-sdRec <- as.numeric()
-sdSim <- as.numeric()
 
-# store the summary statistics in a vector for plotting
-for (animal in 1:length(animalNames)){
-  meansRec <- c(meansRec, summaryStats[[animal]][1,1])
-  meansSim <- c(meansSim, summaryStats[[animal]][1,2:ncol(summaryStats[[animal]])])
-  sdRec <- c(sdRec, summaryStats[[animal]][3,1])
-  sdSim <- c(sdSim, summaryStats[[animal]][3,2:ncol(summaryStats[[animal]])])
-  
-  # create an index vector for the x-axis
-  for (col in 1:length(2:ncol(summaryStats[[animal]]))){
-    xAxSim <- c(xAxSim, animal)
-  }
-}
-
-# plot
-par(mfrow=c(1,2), xpd = TRUE)
-plot(xAxSim, meansSim, col = c('grey'), main = 'Mean elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
-points(meansRec, col = 'red', pch = 19)
-plot(xAxSim, sdSim, col = c('grey'), ylim = c(100,650), main = 'Standard deviation elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
-points(sdRec, col = 'red', pch = 19)
-legend(-0.8,0, c("Recorded", "Simulated"), col = c("red", "grey"), pch = 19, bty = 'n')
-par(mfrow=c(1,1), xpd = FALSE)
 ```
 
 ### Landuse
-```{r}
-# plot elevation in GGplot met simulations/recorded erop?
-```
 
 ```{r}
 # add column to legend with shorter description
+landUseLegend
 LABEL2split <- strsplit(as.character(landUseLegend$LABEL2), split = " ")
 
 # add legend to land use matrix for recorded and simulated data
@@ -478,7 +401,7 @@ for (animal in 1:length(animalNames)){
   
   # create histogram
   assign(paste0("h",animal),ggplot(data=groupedLandUseCount, aes(x=LABEL2, y=count, fill=ind)) +
-    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal], "and simulations")) + xlab(NULL) + theme(axis.text.x = element_text(angle = 8, hjust = 1)))
+    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal])) + xlab(NULL) + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
 }
 
 grid.arrange(h1,h2, layout_matrix = rbind(c(1,1),c(2,2)))
@@ -492,6 +415,22 @@ grid.arrange(h5, layout_matrix = rbind(c(1,1),c(2,2)))
 # disconnect database
 dbDisconnect(movementDB)
 ```
+
+```{r}
+install.packages("rasterVis")
+install.packages("rgl")
+```
+```{r}
+library(rasterVis)
+```
+```{r}
+library(ggplot2)
+library(color)
+
+theme_set(theme_bw())
+gplot(DEM)+ geom_tile(aes(fill = value)) + scale_color_gradent(colors = terrain.colors(10))
+```
+
 
 ## References
 Urbano, F., & Cagnacci, F. (2014). Spatial database for GPS wildlife tracking data. Springer International Publishing.
