@@ -1,11 +1,12 @@
 ---
 title: "Explaining roe deer movement in the Italian alps"
-authors: Anne-Juul Welsink and Marrit Leenstra
+author: Anne-Juul Welsink and Marrit Leenstra
 date: 31 January 2019
 output: html_notebook
 ---
-
 This project investigates movement of GPS collard roe deer in the area of Trento, Italy. It compares recorded GPS data of five animals (Agostino, Alessandra, Daniela, Decimo, and Sandro) with simulated roe deer trajectories in order to assess to what extent roe deer movement can be explained by altitude and/or land use. The results from this project show that the roe deer stick to a relatively small home range and stable altitude compared to the simulated locations. Roe deer had a preference for forest and pasture. However, the difference with simulated data is small, which can be explained by the high prevalence of these land use types in the home range of the roe deer.
+
+![GPS-collared roe deer](./image/roeDeer.jpg)
 
 ## Prepare working environment
 ```{r}
@@ -69,6 +70,9 @@ proj4WGS84 <- "+proj=longlat +datum=WGS84 +no_defs"
 proj4zone32 <- "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs"
 proj4Mercator <- "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"
 ```
+
+## Obtain data
+![Google Earth data collection](./image/googleEarthCode.png)
 
 ```{r}
 # download movement data and unzip
@@ -364,7 +368,7 @@ In the next section we will start with the simulations of animal trajectories. W
 
 ```{r}
 # number of simulations per animal
-nSimulations <- 2   
+nSimulations <- 5   
 
 # perform simulations
 simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
@@ -486,7 +490,7 @@ for (animal in 1:length(animalNames)){
 
 # plot
 par(mfrow=c(1,2), xpd = TRUE)
-plot(xAxSim, meansSim, col = c('grey'), main = 'Mean elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
+plot(xAxSim, meansSim, col = c('grey'), ylim = c(400,1600), main = 'Mean elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
 points(meansRec, col = 'red', pch = 19)
 plot(xAxSim, sdSim, col = c('grey'), ylim = c(100,650), main = 'Standard deviation elevation', xlab = 'animal number', ylab = 'elevation (m)', pch = 19)
 points(sdRec, col = 'red', pch = 19)
