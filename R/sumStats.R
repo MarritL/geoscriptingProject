@@ -35,7 +35,7 @@ sumStats <- function(values, animalNames){
       matrix[3,column] <- sd
       
       if(!column == 1){
-        columnNames <- c(columnNames, paste0("Sim", column))
+        columnNames <- c(columnNames, paste0("Sim", column-1))
       }
     }
     colnames(matrix) <- columnNames
