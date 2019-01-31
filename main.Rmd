@@ -5,9 +5,9 @@ date: 31 January 2019
 output: html_notebook
 ---
 
-TODO:
-Project description
+This project investigates movement of GPS collard roe deer in the area of Trento, Italy. It compares recorded GPS data of five animals (Agostino, Alessandra, Daniela, Decimo, and Sandro) with simulated roe deer trajectories in order to assess to what extent roe deer movement can be explained by altitude and/or land use. The results from this project show that the roe deer stick to a relatively small home range and stable altitude compared to the simulated locations. Roe deer had a preference for forest and pasture. However, the difference with simulated data is small, which can be explained by the high prevalence of these land use types in the home range of the roe deer.
 
+## Prepare working environment
 ```{r}
 # check if libraries are installed
 if (!require("dplyr")) install.packages("dplyr")
@@ -91,6 +91,7 @@ slope <- raster(list.files(path = "data/GoogleEarthData", pattern = glob2rx('*Sl
 landUseLegend <- read.csv(list.files(path = folder, pattern = glob2rx('*.csv'), full.names = TRUE))
 ```
 
+## Database management
 We use an example dataset of roe deer movement from a book about spatial database management (Urbano and Cagnacci, 2014). The data are thus designed for use in a database and set up as interlinking datasets. Direct use in R is possible, but undesirable due to a lack of structure. Therefore, we set up an SQLite database in memory to process the data.
 
 ```{r}
@@ -156,6 +157,7 @@ animals ON dataWithAnimalId.animalsId = animals.animalsId
 selectedMovementData <- dbGetQuery(movementDB, query)
 ```
 
+## Pre-processing
 At this point we have the data we need. However, all data is stored as strings. The correct classes are assigned, before we can create a geometry out of the latitude and longitude columns. We choose the WGS84 zone 32 (EPSG:32632) as coordinate system as it provides enough detail for our analyses. 
 
 ```{r}
@@ -317,9 +319,10 @@ p6 <- ggplot(groupsCleaned, aes(x=id, y=dt, fill = id)) + geom_boxplot(alpha=0.2
 grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
 ```
 
+## Data validation
 The data is ready for the analyses!
 
-Before we start our movement analysis, we will first have a look at the reliability of our data.
+Before we start our movement analysis, we will assess the reliability of our data.
 The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. 
 
 A boxplot allows us to have a first look at the difference in height measurement between DEM and GPS.
@@ -335,7 +338,7 @@ heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), h
 # visualize
 boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
 ```
-Ooh! The GPS data contains large outliers (the alps are not even 20 000m high!). Did Allessandro also have a coffee in outer space?
+Ooh no! The GPS data contains large outliers (the alps are not even 20 000m high!). Did Allessandro also have a coffee in outer space?
 
 A paired t-test is performed to assess the reliability the measurements.
 ```{r}
@@ -347,7 +350,7 @@ tTest
 
 The paired t-test confirms that there is a significant difference (p-value < 2.2e-16) in mean altitude between the GPS height measurement and the DEM height values. The mean difference between the two measurements amounts to 41 meters. This confirms our suspicion that the GPS altitude measurements are not always reliable. Therefore, we will use DEM altitude measurement for our further analysis.  
 
-Now we extract the landuse values from the recorded trajectories. 
+Now that we have obtained reliable altitude measurements, we will extract landuse values for the recorded trajectories. 
 
 ```{r}
 # extract landuse values of recorded trajectories
@@ -367,6 +370,7 @@ nSimulations <- 2
 simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
 ```
 
+Let's visualize some simulations on an interactive map!
 ```{r}
 # plot example of simulated trajectory
 exampleSim1 <- simulations[[2]][[1]][[1]]
@@ -393,14 +397,12 @@ m <- leaflet() %>%
   )
 m 
 ```
-
+We extract the altitude and landuse values of simulated trajectories and store them in a matrix in order to compare them with the recorded GPS trajectories of our animals.
 ```{r}
 # extract altitude and landuse values of simulations 
 simulationElevations <- extractRasterValues(DEM, simulations)
 simulationLandUse <- extractRasterValues(landUse, simulations)
-```
 
-```{r}
 # combine recorded and simulated height data in one matrix
 simElCombi <- combineSimTrack(heightDEM, animalNames, simulationElevations)
 simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
@@ -409,17 +411,17 @@ simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ## Comparison recorded and simulated trajectories
 
 ### Elevation
-
+We can explore whether our roe deer have a preference for altitude through a visualization of movement on a DEM.
 ```{r}
 # variables
-colorsAnimals <- c("red","blue", "orange", "yellow", "purple")
+colors <- c("red","blue", "orange", "yellow", "purple")
 names <- list(c("Agostino", "Allessandra", "Daiela", " Decimo", "Sandro"))
 
 # select theme to plot with right colors
 myTheme=rasterTheme(region=rev(brewer.pal('YlGn', n=9)))
 
 # create plot of DEM with added trajectories
-levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colorsAnimals), text = names )) + 
+levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colors), text = names )) + 
     latticeExtra::layer({
   trajectAgostinoZone32 <- spTransform(trajectAgostino, CRS(proj4zone32))
   sp.lines(trajectAgostinoZone32, col = 'red')}) +
@@ -437,11 +439,14 @@ levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE,
   sp.lines(trajectSandroZone32, col = 'purple')})
 ```
 
+Plots allow us to compare the recorded altitude of our animals with the simulations.
 ```{r}
 # plot the profiles of the simulated profiles and the trajectory
 plotProfiles(simElCombi, animalNames)
 ```
+The recorded trajectories show clearly less variation than the simulated trajectories. This result suggest that roe deer like to stay on a similar altitude for a longer timeperiod. 
 
+In these boxplots we can compare the distribution of the elevation of the recorded trajectories and the simulated trajectories to confirm our visual interpretation of the plotted profiles. 
 ```{r}
 # variables for boxplot 
 xlab <- "Trajectory"
@@ -454,7 +459,7 @@ boxplotlist <- boxplotProfiles(simElCombi, animalNames, xlab, ylab, title, addNa
 # arrage boxplots
 grid.arrange(boxplotlist[[1]],boxplotlist[[2]],boxplotlist[[3]],boxplotlist[[4]],boxplotlist[[5]], layout_matrix = rbind(c(1,2), c(3,4),c(5,6)))
 ```
-
+We can also compare the summary statistics (mean and standard deviation) of the recorded and simulated trajectories. 
 ```{r}
 # calculate summary statistics for the recorded and simulated trajectories
 summaryStats <- sumStats(simElCombi, animalNames)
@@ -489,6 +494,7 @@ legend(-0.8,0, c("Recorded", "Simulated"), col = c("red", "grey"), pch = 19, bty
 par(mfrow=c(1,1), xpd = FALSE)
 
 ```
+These various results all showa similar trend; roe deer stick to a relatively similar altitudes compared to the simulated trajectories. As well they seem to prefer higher altitude over lower altitude. However, this can be the result from human preference for lower altitudes...  
 
 ### Landuse
 
@@ -501,7 +507,7 @@ names <- list(c("Agostino", "Allessandra", "Daiela", " Decimo", "Sandro"))
 # copy landuse
 landUseTest <- landUse 
 
-# start for reclassificatin table
+# start for reclassification table
 from <- 1
 to <- as.integer()
 start <- 1
@@ -552,8 +558,6 @@ levelplot(landUseTest, col.regions= colorsLandUse, opacity = 0.3, main = "Landus
     latticeExtra::layer({
   trajectSandroZone32 <- spTransform(trajectSandro, CRS(proj4zone32))
   sp.lines(trajectSandroZone32, col = 'purple')})
-#
-
 ```
 
 
