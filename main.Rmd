@@ -411,6 +411,33 @@ simLandCombi <- combineSimTrack(landuseTracks, animalNames, simulationLandUse)
 ### Elevation
 
 ```{r}
+# variables
+colorsAnimals <- c("red","blue", "orange", "yellow", "purple")
+names <- list(c("Agostino", "Allessandra", "Daiela", " Decimo", "Sandro"))
+
+# select theme to plot with right colors
+myTheme=rasterTheme(region=rev(brewer.pal('YlGn', n=9)))
+
+# create plot of DEM with added trajectories
+levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colorsAnimals), text = names )) + 
+    latticeExtra::layer({
+  trajectAgostinoZone32 <- spTransform(trajectAgostino, CRS(proj4zone32))
+  sp.lines(trajectAgostinoZone32, col = 'red')}) +
+    latticeExtra::layer({
+  trajectAllessandraZone32 <- spTransform(trajectAlessandra, CRS(proj4zone32))
+  sp.lines(trajectAllessandraZone32, col = 'blue')}) +
+    latticeExtra::layer({
+  trajectDanielaZone32 <- spTransform(trajectDaniela, CRS(proj4zone32))
+  sp.lines(trajectDanielaZone32, col = 'orange')}) +
+    latticeExtra::layer({
+  trajectDecimoZone32 <- spTransform(trajectDecimo, CRS(proj4zone32))
+  sp.lines(trajectDecimoZone32, col = 'yellow')}) +
+    latticeExtra::layer({
+  trajectSandroZone32 <- spTransform(trajectSandro, CRS(proj4zone32))
+  sp.lines(trajectSandroZone32, col = 'purple')})
+```
+
+```{r}
 # plot the profiles of the simulated profiles and the trajectory
 plotProfiles(simElCombi, animalNames)
 ```
@@ -464,16 +491,52 @@ par(mfrow=c(1,1), xpd = FALSE)
 ```
 
 ### Landuse
+
 ```{r}
 # variables
-colors <- c("red","blue", "orange", "yellow", "purple")
+colorsAnimals <- c("red","blue", "orange", "yellow", "purple")
+colorsLandUse <- c('white','azure3', 'azure3', 'azure4','azure4','bisque4','bisque4','chartreuse', 'chartreuse2','chartreuse2','chartreuse3','darkolivegreen1', 'darkolivegreen1','darkolivegreen','darkolivegreen','darkorange2','darkorange2','darkgoldenrod3','darkcyan', 'darkslategray1')
 names <- list(c("Agostino", "Allessandra", "Daiela", " Decimo", "Sandro"))
 
-# select theme to plot with right colors
-myTheme=rasterTheme(region=rev(brewer.pal('YlGn', n=9)))
+# copy landuse
+landUseTest <- landUse 
 
-# create plot of DEM with added trajectories
-levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colors), text = names )) + 
+# start for reclassificatin table
+from <- 1
+to <- as.integer()
+start <- 1
+clas <- as.integer()
+
+# make reclassification table to remove double lables
+for (label in 1:(length(landUseLegend$LABEL2)-1)){
+  
+  thisone <- landUseLegend$LABEL2[label]
+  nextone <- landUseLegend$LABEL2[label+1]
+  
+  # check if label is same as next one
+  if (!thisone == nextone){
+    to <- c(to,label)
+    from <- c(from, label+1)
+  }
+  
+}
+# add last number to get same length
+to <- c(to,length(landUseLegend$LABEL2))
+# create the reclassificatin table
+rcl <- cbind(from, to, to)
+
+# reclassify
+landUseTest <- reclassify(landuseTest, rcl)
+
+# ratify to get labels
+landUseTest <- ratify(landUseTest)
+rat <- levels(landUseTest)[[1]]
+rat2 <- left_join(rat, landUseLegend, by = c("ID" = "GRID_CODE"))
+rat2drop <- rat2[,c("ID","LABEL2")]
+levels(landUseTest) <- rat2drop
+
+# plot
+levelplot(landUseTest, col.regions= colorsLandUse, opacity = 0.3, main = "Landuse of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000), key = list(space = 'bottom', points = list(lty = 1, col = colorsAnimals), text = names )) + 
     latticeExtra::layer({
   trajectAgostinoZone32 <- spTransform(trajectAgostino, CRS(proj4zone32))
   sp.lines(trajectAgostinoZone32, col = 'red')}) +
@@ -489,45 +552,12 @@ levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE,
     latticeExtra::layer({
   trajectSandroZone32 <- spTransform(trajectSandro, CRS(proj4zone32))
   sp.lines(trajectSandroZone32, col = 'purple')})
-```
-
-```{r}
-myTheme2=rasterTheme(region=rev(brewer.pal('Paired', n=9)))
-levelplot(landUse, main = "Landuse at recorded and simulated roe deer locations", margin = FALSE, par.settings=myTheme2,
-          xlim=c(640000, 680000))
-
-landUseRat <- ratify(landUse)
-rat <- levels(landUseRat)
-landUseRat$LandUse_2012 <- landUseLegend$LABEL2
-levels2 <- landUseLegend$LABEL2
-landUseRat$LandUse_2012 <- levels()
-levels(landUseRat) <- rat
-
-landUseTest <- landUse
-landUseTest <- ratify(landUseTest)
-
-rat <- levels(landUseTest)[[1]]
-rat2 <- left_join(rat, landUseLegend, by = c("ID" = "GRID_CODE"))
-rat2drop <- rat2[,c("ID","LABEL3")]
-
-levels(landUseTest) <- rat2drop
-
-
-levelplot(landUseTest, col.regions=c('palegreen', 'midnightblue', 'indianred1'))
-
-levelplot(landUseTest, col.regions = brewer.pal('Paired'))
-levelplot(r, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000))
-levelplot(landUseTest, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000))
 #
 
 ```
 
 
 ```{r}
-# add column to legend with shorter description
-landUseLegend
-LABEL2split <- strsplit(as.character(landUseLegend$LABEL2), split = " ")
-
 # add legend to land use matrix for recorded and simulated data
 simLandCombiDFLegend <- addLegend(simLandCombi, legend = landUseLegend, animalNames = animalNames)
 
@@ -540,7 +570,7 @@ for (animal in 1:length(animalNames)){
   
   # create histogram
   assign(paste0("h",animal),ggplot(data=groupedLandUseCount, aes(x=LABEL2, y=count, fill=ind)) +
-    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal])) + xlab(NULL) + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
+    geom_bar(stat="identity", position=position_dodge()) + ggtitle(paste("Land use of", animalNames[animal])) + xlab(NULL) + theme(axis.text.x = element_text(angle = 11, hjust = 1)))
 }
 
 grid.arrange(h1,h2, layout_matrix = rbind(c(1,1),c(2,2)))
