@@ -181,18 +181,46 @@ movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementS
 ```
 
 We are curious where "our" roe deer are going! 
+For visualization purposes we need to create spatial lines of the GPS recorded trajectories.
 
 ```{r}
-# check data
-plot(DEM)
-lines(movementTrajectories[[1]])
-lines(movementTrajectories[[2]], col = 'red')
-lines(movementTrajectories[[3]], col = 'blue')
-lines(movementTrajectories[[4]], col = 'purple')
-lines(movementTrajectories[[5]], col = 'orange')
+# select distinct animals
+animalNames <- distinct(groups, id)[[1]]
+
+for (animal in animalNames){
+  # get location data from nth animal
+  locationdatainit <- groups[(groups$id == animal),]
+  
+  # create spatial line
+  assign(paste0("trajectinit",animal), createSpatialLine(locationdata = locationdatainit, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal))
+}
+
 ```
 
-Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. We look at boxplots of the different variables to find the best variables to remove these outliers. 
+An interactive leaflet map allows us to explore the GPS recorded movement of our roe deer, Agostino, Alessandra, Daniela, Decimo, and Sandro.
+```{r}
+m <- leaflet() %>% 
+  setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
+  # baselayers
+  addTiles(group = 'Street map') %>%  
+  addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
+  addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
+  # overlay groups
+  addPolylines(data = trajectinitAgostino, weight = 1, opacity = 0.8, color = "red", group = 'Agostino') %>% 
+  addPolylines(data = trajectinitAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
+  addPolylines(data = trajectinitDaniela, weight = 1, opacity = 0.8, color = "orange", group = 'Daniela') %>% 
+  addPolylines(data = trajectinitDecimo, weight = 1, opacity = 0.8, color = "yellow", group = 'Decimo') %>% 
+  addPolylines(data = trajectinitSandro, weight = 1, opacity = 0.8, color = "purple", group = 'Sandro') %>% 
+  addLayersControl(
+    baseGroups = c('Street map', 'Terrain', 'Satellite'),
+    overlayGroups = c('Agostino', 'Alessandra', 'Daniela', 'Decimo', 'Sandro'),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+m 
+
+```
+
+Oops! The data clearly contain some outliers. These need to be removed in order to perform reliable analyses. But how do we define which points are outliers? We look at boxplots of different variables in order to determine a suitable method to identify outliers. 
 
 ```{r}
 # cast back to dataframe
@@ -237,60 +265,7 @@ groupsCleaned <- groups %>% filter(x < xMax) %>% filter(x > xMin) %>% filter(y <
 movementTrajectoriesCleaned <- dl(groupsCleaned)
 ```
 
-```{r}
-# check data again
-plot(DEM)
-lines(movementTrajectoriesCleaned[[1]])
-lines(movementTrajectoriesCleaned[[2]], col = 'red')
-lines(movementTrajectoriesCleaned[[3]], col = 'blue')
-lines(movementTrajectoriesCleaned[[4]], col = 'purple')
-lines(movementTrajectoriesCleaned[[5]], col = 'orange')
-
-# boxplots
-p1 <- ggplot(groupsCleaned, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
-p2 <- ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
-p3 <- ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
-p4 <- ggplot(groupsCleaned, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
-p5 <- ggplot(groupsCleaned, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
-p6 <- ggplot(groupsCleaned, aes(x=id, y=dt, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
-
-grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
-```
-
-The data is ready for the analyses!
-
-Before we start our movement analysis, we will first have a look at the reliability of our data.
-The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. A paired t-test is performed to assess the reliability the measurements.
-```{r}
-# calculate DEM height values at point locations for which GPS height data is available.
-heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
-heightDEM$animal <- unlist(groupsCleaned[,"id"])
-colnames(heightDEM) <- c("ID", "rasterVal", "animal")
-
-heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$rasterVal, groupsCleaned$height))
-
-# perform a paired t-test to compare mean GPS and DEM height
-tTest <- t.test(heightDEM$rasterVal, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
-print("Results of the paired t-test:")
-tTest
-
-# visualize
-boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
-
-```
-
-The paired t-test confirmed that there is a significant difference (p-value < 2.2e-16) in mean altitude between the GPS height measurement and the DEM height values. The mean difference between the two measurements amounts to 41 meters. As shown in the boxplot, the GPS data contains large outliers (the alps are not 20 000 in height!). This confirms our suspicion that the GPS altitude measurements are not always reliable. Therefore, we will use DEM altitude measurement for our further analysis.  
-
-Now we extract the landuse values from the recorded trajectories. 
-
-```{r}
-# extract landuse values of recorded trajectories
-landuseTracks <- extract(landUse, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
-landuseTracks$animal <- unlist(groupsCleaned[,"id"])
-colnames(landuseTracks) <- c("ID", "rasterVal", "animal")
-```
-
-For visualization purposes we need to create Spatial Lines of the recorded trajectories.
+For visualization purposes we create Spatial Lines of the recorded trajectories without outliers.
 
 ```{r}
 # select distinct animals
@@ -306,7 +281,7 @@ for (animal in animalNames){
 
 ```
 
-Visualize using leaflet
+We can now visualize the cleaned movement patterns of our beloved roe deer!
 ```{r}
 m <- leaflet() %>% 
   setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
@@ -327,6 +302,60 @@ m <- leaflet() %>%
   )
 m 
 ```
+Note! The data might still contain a few wrongly recorded points (we are not sure whether Agostino really visited his aunt in Stravino for a coffee). However, we are not justified to remove these potential outliers on the basis of our previously defined cut-off point.
+
+Boxplots allow for further assessment of the cleaned data. Looks a lot better, doesn't it?
+```{r}
+# boxplots
+p1 <- ggplot(groupsCleaned, aes(x=id, y=x, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("x-coordinates of locations")
+p2 <- ggplot(groupsCleaned, aes(x=id, y=y, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("y-coordinates of locations")
+p3 <- ggplot(groupsCleaned, aes(x=id, y=dist, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Distance between relocations")
+p4 <- ggplot(groupsCleaned, aes(x=id, y=abs.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Absolute angle between relocations")
+p5 <- ggplot(groupsCleaned, aes(x=id, y=rel.angle, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Relative angle between relocations")
+p6 <- ggplot(groupsCleaned, aes(x=id, y=dt, fill = id)) + geom_boxplot(alpha=0.2) + theme(legend.position = "none") + ggtitle("Time between relocations")
+
+grid.arrange(p1,p2,p3,p4,p5,p6, layout_matrix = rbind(c(1,2),c(3,4),c(5,6)))
+```
+
+The data is ready for the analyses!
+
+Before we start our movement analysis, we will first have a look at the reliability of our data.
+The altitude measurement of the GPS data needs to be validated through a comparison with the DEM. GPS data are not reliable if its mean altitude differs significantly from the DEM values at corresponding spatial points. 
+
+A boxplot allows us to have a first look at the difference in height measurement between DEM and GPS.
+
+```{r}
+# calculate DEM height values at point locations for which GPS height data is available.
+heightDEM <- extract(DEM, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
+heightDEM$animal <- unlist(groupsCleaned[,"id"])
+colnames(heightDEM) <- c("ID", "rasterVal", "animal")
+
+heightData <- data.frame(group = rep(c("DEM", "GPS"), each = nrow(heightDEM)), height = c(heightDEM$rasterVal, groupsCleaned$height))
+
+# visualize
+boxplot(height ~ group, heightData, main = "Height boxplot GPS and DEM", ylab = "Height")
+```
+Ooh! The GPS data contains large outliers (the alps are not even 20 000m high!). Did Allessandro also have a coffee in outer space?
+
+A paired t-test is performed to assess the reliability the measurements.
+```{r}
+# perform a paired t-test to compare mean GPS and DEM height
+tTest <- t.test(heightDEM$rasterVal, groupsCleaned$height, paired = TRUE, alternative = "two.sided")
+print("Results of the paired t-test:")
+tTest
+```
+
+The paired t-test confirms that there is a significant difference (p-value < 2.2e-16) in mean altitude between the GPS height measurement and the DEM height values. The mean difference between the two measurements amounts to 41 meters. This confirms our suspicion that the GPS altitude measurements are not always reliable. Therefore, we will use DEM altitude measurement for our further analysis.  
+
+Now we extract the landuse values from the recorded trajectories. 
+
+```{r}
+# extract landuse values of recorded trajectories
+landuseTracks <- extract(landUse, as.data.frame(groupsCleaned[,c("x","y")]), method='simple', na.rm=TRUE, df=TRUE)
+landuseTracks$animal <- unlist(groupsCleaned[,"id"])
+colnames(landuseTracks) <- c("ID", "rasterVal", "animal")
+```
+
 ## Simulations
 In the next section we will start with the simulations of animal trajectories. We will use the simm.crw function of the adehabitatLT package for the simulations. We wrapped this function in the simulateMovement function so that it is easy to specify the number of simulations and save all simulation in an convenient dataformat. The simulations start at the same location as the respective animal, and will have the same length.
 
@@ -383,6 +412,18 @@ summaryStats <- sumStats(simElCombi, animalNames)
 ```
 
 ### Landuse
+```{r}
+# plot elevation in GGplot met simulations/recorded erop?
+# r = raster(xmn=621150,xmx=694170,ymn=5090490,ymx=5109210, nrow = 624, ncol = 2434)
+# DEMmasked <- mask(r, DEM)
+# plot(DEMmasked)
+library(rasterVis)
+myTheme=rasterTheme(region=brewer.pal('Blues', n=9))
+levelplot(DEM, main = "Altitude of recorded and simulated roe deer locations", margin = FALSE)
+
+
+           
+```
 
 ```{r}
 # add column to legend with shorter description
@@ -415,22 +456,6 @@ grid.arrange(h5, layout_matrix = rbind(c(1,1),c(2,2)))
 # disconnect database
 dbDisconnect(movementDB)
 ```
-
-```{r}
-install.packages("rasterVis")
-install.packages("rgl")
-```
-```{r}
-library(rasterVis)
-```
-```{r}
-library(ggplot2)
-library(color)
-
-theme_set(theme_bw())
-gplot(DEM)+ geom_tile(aes(fill = value)) + scale_color_gradent(colors = terrain.colors(10))
-```
-
 
 ## References
 Urbano, F., & Cagnacci, F. (2014). Spatial database for GPS wildlife tracking data. Springer International Publishing.
