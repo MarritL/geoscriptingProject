@@ -503,23 +503,21 @@ levels2 <- landUseLegend$LABEL2
 landUseRat$LandUse_2012 <- levels()
 levels(landUseRat) <- rat
 
+landUseTest <- landUse
+landUseTest <- ratify(landUseTest)
 
-## Categorical data
-r <- raster(nrow=10, ncol=10)
-r[] = 1
-r[51:100] = 3
-r[3:6, 1:5] = 5
-r <- ratify(r)
-     
-rat <- levels(r)[[1]]
-rat$landcover <- c('Pine', 'Oak', 'Meadow')
-rat$class <- c('A1', 'B2', 'C3')
-levels(r) <- rat
-r
+rat <- levels(landUseTest)[[1]]
+rat2 <- left_join(rat, landUseLegend, by = c("ID" = "GRID_CODE"))
+rat2drop <- rat2[,c("ID","LABEL3")]
 
-levelplot(r, col.regions=c('palegreen', 'midnightblue', 'indianred1'))
+levels(landUseTest) <- rat2drop
 
-levelplot(landUseRat, col.regions = brewer.pal('Paired'))
+
+levelplot(landUseTest, col.regions=c('palegreen', 'midnightblue', 'indianred1'))
+
+levelplot(landUseTest, col.regions = brewer.pal('Paired'))
+levelplot(r, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000))
+levelplot(landUseTest, main = "Altitude of recorded roe deer locations", margin = FALSE, par.settings=myTheme, xlim = c(647000, 670000))
 #
 
 ```
