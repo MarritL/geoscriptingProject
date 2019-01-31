@@ -494,7 +494,7 @@ par(mfrow=c(1,1), xpd = FALSE)
 ```
 
 ### Landuse
-
+The next section analyses whether the roe deer have a preference for certain land use types. Please note that the following plot has double labels and a sub-optimal visualization. Sadly, we did not have enough time to figure these issues out. We hope you will forgive us these flaws! 
 ```{r}
 myTheme2=rasterTheme(region=rev(brewer.pal('Paired', n=9)))
 levelplot(landUse, main = "Landuse at recorded and simulated roe deer locations", margin = FALSE, par.settings=myTheme2,
@@ -525,8 +525,9 @@ levelplot(landUseTest, main = "Altitude of recorded roe deer locations", margin 
 #
 
 ```
+The above map does not give us a very clear impression as to whether our animals prefer certain types of landuse. However, it does clearly show that the homerange of our animals mostly consists of forest and pasture. 
 
-
+Barplots may provide a clearer indication as to whether our animals have a preference for particular types of landuse:
 ```{r}
 # add column to legend with shorter description
 landUseLegend
@@ -552,7 +553,10 @@ grid.arrange(h3,h4, layout_matrix = rbind(c(1,1),c(2,2)))
 grid.arrange(h5, layout_matrix = rbind(c(1,1),c(2,2)))
 
 ```
+These plots confirm that our animals mostly reside in forest and pasture areas. Our simulated trajectories provide similar results to the recorded movement, which may explained by the fact that these landuse classes are prevalent in the area in which our animals live. The fact that this is their preferred home range does suggest that our roe deer love their strolls through forest and pasture!
 
+## Conclusion
+This project has compared recorded and simulated roe deer movement in the area of Trento, Italy. It has analysed to what extent elevation and landuse can explain roe deer movement in the area. The results of the analysis suggest that the roe deer stick to a relatively small home range and stable altitude compared to the simulated locations. Roe deer had a preference for forest and pasture. However, the difference with simulated data is small, due to the high prevalence of these land use types in the home range of the roe deer.
 
 ```{r}
 # disconnect database
