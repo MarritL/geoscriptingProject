@@ -23,6 +23,10 @@ if (!require("gridExtra")) install.packages("gridExtra")
 if (!require("leaflet")) install.packages("leaflet")
 if (!require("rlist")) install.packages("rlist")
 if (!require("rasterVis")) install.packages("rasterVis")
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 ```
 
 ```{r}
@@ -179,7 +183,7 @@ movementSDF <- spTransform(WGS84movementSDF, CRS(proj4zone32))
 # create trajectories
 movementTrajectories <- as.ltraj(xy = coordinates(movementSDF), date = movementSDF$date, id = movementSDF$name)
 
-# and make a dataframe to be able to add height informatin
+# and create a dataframe to group our data and add height information
 dataframeTrajectories <- ld(movementTrajectories)
 groups <- dataframeTrajectories %>% mutate(height = movementSDF$height) %>% group_by(id)
 trajectories <- dl(groups)
@@ -365,10 +369,33 @@ nSimulations <- 2
 
 # perform simulations
 simulations <- simulateMovement(trajectories = movementTrajectoriesCleaned, nSimulations = nSimulations, proj4 = proj4zone32)
+```
 
+```{r}
 # plot example of simulated trajectory
-plot(DEM)
-lines(simulations[[1]][[1]][[1]])
+exampleSim1 <- simulations[[2]][[1]][[1]]
+exampleSim2 <- simulations[[2]][[2]][[1]]
+
+# create spatial line
+simExample1WGS84 <- createSpatialLine(locationdata = exampleSim1, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal)
+simExample2WGS84 <- createSpatialLine(locationdata = exampleSim2, proj4dataframe = proj4zone32, proj4line = proj4WGS84, lineId = animal)
+
+m <- leaflet() %>% 
+  setView(lng=11.0367, lat=46.0331, zoom = 11) %>%
+  # baselayers
+  addTiles(group = 'Street map') %>%  
+  addProviderTiles('Stamen.Terrain', group = 'Terrain') %>% 
+  addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
+  # overlay groups
+  addPolylines(data = simExample1WGS84, weight = 1, opacity = 0.8, color = "orange", group = 'Simulation 1') %>% 
+  addPolylines(data = simExample2WGS84 , weight = 1, opacity = 0.8, color = "red", group = 'Simulation 2') %>% 
+  addPolylines(data = trajectAlessandra, weight = 1, opacity = 0.8, color = "blue", group = 'Alessandra') %>% 
+  addLayersControl(
+    baseGroups = c('Street map', 'Terrain', 'Satellite'),
+    overlayGroups = c('Alessandra', 'Simulation 1', 'Simulation 2'),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+m 
 ```
 
 ```{r}
@@ -466,8 +493,41 @@ levelplot(DEM, main = "Altitude of recorded roe deer locations", margin = FALSE,
     latticeExtra::layer({
   trajectSandroZone32 <- spTransform(trajectSandro, CRS(proj4zone32))
   sp.lines(trajectSandroZone32, col = 'purple')})
-           
 ```
+
+```{r}
+myTheme2=rasterTheme(region=rev(brewer.pal('Paired', n=9)))
+levelplot(landUse, main = "Landuse at recorded and simulated roe deer locations", margin = FALSE, par.settings=myTheme2,
+          xlim=c(640000, 680000))
+
+landUseRat <- ratify(landUse)
+rat <- levels(landUseRat)
+landUseRat$LandUse_2012 <- landUseLegend$LABEL2
+levels2 <- landUseLegend$LABEL2
+landUseRat$LandUse_2012 <- levels()
+levels(landUseRat) <- rat
+
+
+## Categorical data
+r <- raster(nrow=10, ncol=10)
+r[] = 1
+r[51:100] = 3
+r[3:6, 1:5] = 5
+r <- ratify(r)
+     
+rat <- levels(r)[[1]]
+rat$landcover <- c('Pine', 'Oak', 'Meadow')
+rat$class <- c('A1', 'B2', 'C3')
+levels(r) <- rat
+r
+
+levelplot(r, col.regions=c('palegreen', 'midnightblue', 'indianred1'))
+
+levelplot(landUseRat, col.regions = brewer.pal('Paired'))
+#
+
+```
+
 
 ```{r}
 # add column to legend with shorter description
